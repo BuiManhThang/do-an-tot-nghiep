@@ -1,0 +1,3 @@
+.my-input ::-ms-reveal {
+  display: none;
+}
