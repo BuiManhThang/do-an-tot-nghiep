@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { storage } from '../firebase/index'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { v4 as uuidv4 } from 'uuid'
 
 export const useUpload = () => {
   const [isLoading, setIsLoading] = useState(false)
@@ -18,7 +19,11 @@ export const useUpload = () => {
       if (!file) {
         continue
       }
-      const fileRef = ref(storageRef, file?.name)
+
+      const filenameArr = file.name.split('.')
+      const fileNameArrLength = filenameArr.length
+      const fileExtension = filenameArr[fileNameArrLength - 1]
+      const fileRef = ref(storageRef, `${uuidv4()}.${fileExtension}`)
       uploadList.push(uploadBytes(fileRef, file))
     }
 
