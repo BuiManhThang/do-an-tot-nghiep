@@ -1,6 +1,7 @@
 import express from 'express'
 import morgan from 'morgan'
 import dotenv from 'dotenv'
+import cors from 'cors'
 import userRouter from './routers/userRouter'
 import productRouter from './routers/productRouter'
 import categoryRouter from './routers/categoryRouter'
@@ -8,10 +9,16 @@ import orderRouter from './routers/orderRouter'
 
 dotenv.config()
 const PORT = process.env.PORT || 3001
+const CLIENT_URL = process.env.CLIENT_URL
 const app = express()
 
 // Middlewares
 app.use(morgan('dev'))
+app.use(
+  cors({
+    origin: CLIENT_URL,
+  })
+)
 app.use(express.urlencoded())
 app.use(express.json())
 
