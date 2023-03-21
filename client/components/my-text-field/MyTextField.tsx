@@ -5,6 +5,7 @@ type MyTextFieldProps = {
   id: string
   name?: string
   label?: string
+  placeholder?: string
   value?: string
   error?: string
   type?: string
@@ -23,6 +24,7 @@ const MyTextField = ({
   id,
   name,
   label,
+  placeholder,
   value,
   error,
   type = 'text',
@@ -83,6 +85,7 @@ const MyTextField = ({
           value={value}
           autoComplete={autoComplete}
           className={inputClassName}
+          placeholder={placeholder}
           style={inputStyle}
           onChange={handleChange}
         />

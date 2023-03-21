@@ -5,6 +5,7 @@ type MyPasswordFieldProps = {
   id: string
   name?: string
   label?: string
+  placeholder?: string
   value?: string
   error?: string
   autoComplete?: string
@@ -18,6 +19,7 @@ const MyPasswordField = ({
   id,
   name,
   label,
+  placeholder,
   value,
   error,
   autoComplete = 'off',
@@ -46,6 +48,7 @@ const MyPasswordField = ({
       id={id}
       name={name}
       label={label}
+      placeholder={placeholder}
       error={error}
       type={inputType}
       autoComplete={autoComplete}
