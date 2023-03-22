@@ -361,7 +361,6 @@ export default class UserController extends BaseController {
   getCurrentUser = async (req: Request, res: Response) => {
     try {
       const id: string = req.body.userId
-      console.log(req.body)
       const model = await this.model.findFirst({
         where: {
           id,

@@ -34,6 +34,7 @@ export type Product = {
   image: string
   amount: number
   price: number
+  unit: string
   isActive: boolean
   gallery: string[]
   desc?: string
@@ -91,6 +92,7 @@ export type ProductInCart = {
   image: string
   amount: number
   price: number
+  unit: string
   categoryId: string
   categoryName: string
 }
@@ -102,6 +104,7 @@ export type ProductInOrder = {
   image: string
   amount: number
   price: number
+  unit: string
   categoryId: string
   categoryName: string
 }

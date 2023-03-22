@@ -34,6 +34,7 @@ model Product {
   image      String
   amount     Int
   price      Float
+  unit       String
   isActive   Boolean  @default(true) // Nếu ko đang kích hoạt tức là ko bán
   gallery    String[]
   desc       String?
@@ -91,6 +92,7 @@ type ProductInCart {
   image        String
   amount       Int // Số lượng trong giỏ
   price        Float
+  unit         String
   categoryId   String @db.ObjectId
   categoryName String
 }
@@ -102,6 +104,7 @@ type ProductInOrder {
   image        String
   amount       Int // Số lượng mua
   price        Float
+  unit         String
   categoryId   String @db.ObjectId
   categoryName String
 }

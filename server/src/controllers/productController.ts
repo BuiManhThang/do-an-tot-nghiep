@@ -218,6 +218,7 @@ export default class ProductController extends BaseController {
         image: entity.image,
         amount: entity.amount,
         price: entity.price,
+        unit: entity.unit,
         isActive: entity.isActive,
         gallery: entity.gallery,
         desc: entity.desc,
@@ -238,6 +239,7 @@ export default class ProductController extends BaseController {
         image: entity.image,
         amount: entity.amount,
         price: entity.price,
+        unit: entity.unit,
         isActive: entity.isActive,
         gallery: entity.gallery,
         desc: entity.desc,
@@ -262,6 +264,9 @@ export default class ProductController extends BaseController {
     }
     if (!newEntity.price) {
       newEntity.price = oldEntity.price
+    }
+    if (!newEntity.unit) {
+      newEntity.unit = oldEntity.unit
     }
     if (!newEntity.isActive) {
       newEntity.isActive = oldEntity.isActive

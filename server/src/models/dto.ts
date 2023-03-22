@@ -107,6 +107,7 @@ export type CreateProductDto = {
   image: string
   amount: number
   price: number
+  unit: string
   isActive: boolean
   gallery: string[]
   desc?: string
@@ -119,6 +120,7 @@ export type UpdateProductDto = {
   image: string
   amount: number
   price: number
+  unit: string
   isActive: boolean
   gallery: string[]
   desc?: string
