@@ -5,6 +5,7 @@ import Background from '../../assets/images/sign-in/pexels-moose-photos-1037995.
 import TheNavBar from './TheNavBar'
 import { getCurrentUser } from '@/store/reducers/userSlice'
 import { useAppDispatch } from '@/hooks/reduxHook'
+import TheFooter from './TheFooter'
 
 type Props = {
   children?: React.ReactNode | React.ReactNode[]
@@ -36,7 +37,10 @@ const TheLayout = ({ children }: Props) => {
   return (
     <div>
       <TheNavBar />
-      {children}
+      <div className="h-[calc(100vh_-_64px)] overflow-auto bg-page-bg">
+        <div className="w-full">{children}</div>
+        <TheFooter />
+      </div>
     </div>
   )
 }

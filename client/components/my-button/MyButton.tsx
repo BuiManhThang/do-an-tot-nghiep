@@ -4,6 +4,7 @@ import MyLoadingCircle from '../my-loading-circle/MyLoadingCircle'
 export enum MyButtonType {
   Primary = 1,
   Secondary = 2,
+  PrimarySolid = 3,
 }
 
 type MyButtonProps = {
@@ -43,6 +44,34 @@ const MyButton = ({
       <button
         title={title}
         className={`relative outline-none bg-white border-secondary border hover:bg-secondary-hover focus:bg-secondary-hover focus:ring-2 ring-secondary-ring transition-colors inline-flex items-center h-9 px-3 font-medium text-base rounded-md text-secondary leading-none min-w-fit ${
+          isLoading ? 'cursor-default' : ''
+        } ${className}`}
+        style={style}
+        onClick={handleClick}
+      >
+        {isLoading ? (
+          <MyLoadingCircle />
+        ) : (
+          <>
+            {startIcon && startIcon}
+            {text && (
+              <span
+                className={`text-center w-full ${startIcon ? 'pl-2' : ''} ${endIcon ? 'pr-2' : ''}`}
+              >
+                {text}
+              </span>
+            )}
+            {endIcon && endIcon}
+          </>
+        )}
+      </button>
+    )
+  }
+  if (type === MyButtonType.PrimarySolid) {
+    return (
+      <button
+        title={title}
+        className={`relative outline-none bg-white border-primary border hover:bg-primary-hover hover:text-white focus:bg-primary-hover focus:text-white focus:ring-2 ring-primary-ring transition-colors inline-flex items-center h-9 px-3 font-medium text-base rounded-md text-primary leading-none min-w-fit ${
           isLoading ? 'cursor-default' : ''
         } ${className}`}
         style={style}

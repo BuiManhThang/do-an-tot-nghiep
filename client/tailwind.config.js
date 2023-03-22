@@ -18,9 +18,12 @@ module.exports = {
         secondary: '#4b5563',
         'secondary-hover': '#d1d5db',
         'secondary-ring': '#d1d5db',
+        'page-bg': '#f5f5f7',
       },
       boxShadow: {
         custom: '0 0 6px 0 rgba(0, 0, 0, 0.24)',
+        'custom-lg': '0 0 12px 0 rgba(0, 0, 0, 0.24)',
+        'custom-xl': '0 0 18px 0 rgba(0, 0, 0, 0.24)',
       },
     },
   },

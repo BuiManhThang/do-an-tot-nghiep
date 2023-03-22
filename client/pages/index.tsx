@@ -1,437 +1,227 @@
 import Head from 'next/head'
-import MyButton, { MyButtonType } from '@/components/my-button/MyButton'
-import MyTextField from '@/components/my-text-field/MyTextField'
-import MyPasswordField from '@/components/my-password-field/MyPasswordField'
-import MyCheckbox from '@/components/my-checkbox/MyCheckbox'
-import MyRadio from '@/components/my-radio/MyRadio'
-import MySelect, { MySelectOption } from '@/components/my-select/MySelect'
-import MyUploadThumbnail from '@/components/my-upload-img/MyUploadThumbnail'
-import { useState } from 'react'
-import MyUploadImages from '@/components/my-upload-img/MyUploadImages'
+import { useEffect, useRef, useState } from 'react'
 import MySlider from '@/components/my-slider/MySlider'
-import MyPopup from '@/components/my-popup/MyPopup'
-import MyTable, { Column, TableAlign, TableDataType } from '@/components/my-table/MyTable'
+import ProductCardList from '@/components/product-card-list/ProductCardList'
+import ProductCard from '@/components/product-card/ProductCard'
+import Image from 'next/image'
+import { CardProduct } from '@/types/product'
 
 import Image1 from '../assets/images/test/1.jpg'
 import Image2 from '../assets/images/test/2.jpg'
 import Image3 from '../assets/images/test/3.jpg'
 import Image4 from '../assets/images/test/4.jpg'
 import Image5 from '../assets/images/test/5.jpg'
+import MyButton, { MyButtonType } from '@/components/my-button/MyButton'
+import Link from 'next/link'
 
 const IMAGES = [Image1, Image2, Image3, Image4, Image5]
+const IMAGES_2 = [Image3, Image4, Image5]
 
-const OPTIONS: MySelectOption[] = [
+const WHY_CHOOSE = [
   {
-    value: 1,
-    text: 'Chó Chó Chó Chó Chó Chó Chó Chó',
+    title: 'Chính sách bảo hành đảm bảo',
+    content:
+      'Chính sách bảo hành lên tới một năm đối với các lỗi do sản phẩm gây ra, bảo hành 1 đổi 1 trong vòng 1 tháng.',
+    icon: <i className="far fa-hand-paper"></i>,
   },
   {
-    value: 2,
-    text: 'Mèo',
+    title: 'Thủ tục mua hàng nhanh chóng',
+    content:
+      'Mua hàng nhanh chóng, tiện lợi thông qua ứng dụng web, xác nhận đơn hàng chỉ 10 phút sau khi đặt hàng.',
+    icon: <i className="fas fa-rocket"></i>,
   },
   {
-    value: 3,
-    text: 'Gà',
-  },
-  {
-    value: 4,
-    text: 'Vịt',
-  },
-  {
-    value: 5,
-    text: 'Lợn',
-  },
-  {
-    value: 6,
-    text: 'Chim',
+    title: 'Miễn phí sửa chữa',
+    content:
+      'Chúng tôi thực hiện chính sách sửa chữa sản phẩm trong vòng 6 tháng sau khi mua sản phẩm.',
+    icon: <i className="fas fa-tools"></i>,
   },
 ]
 
-type User = {
-  id: string
-  name: string
-  gender: boolean
-  email: string
-  birthday: Date
-  salary?: number
-}
-
-const COLUMNS: Column[] = [
+const WHY_CHOOSE_2 = [
   {
-    dataType: TableDataType.Text,
-    fieldName: 'name',
-    title: 'Họ tên',
-    minWidth: 200,
+    title: 'Sự kiện mua hàng',
+    content: 'Tham gia quay số trúng thưởng đối với đơn hàng từ 1 Tỉ VNĐ.',
+    icon: <i className="fas fa-gift"></i>,
   },
   {
-    dataType: TableDataType.Custom,
-    align: TableAlign.Center,
-    fieldName: 'gender',
-    title: 'Giới tính',
-    width: 100,
-    minWidth: 100,
-    template: (rowData) => {
-      const user: User = rowData as User
-      if (user.gender === true) {
-        return (
-          <div className="flex items-center justify-center w-full">
-            <i className="fa-solid fa-mars"></i>
-          </div>
-        )
-      }
-      return (
-        <div className="flex items-center justify-center w-full">
-          <i className="fa-regular fa-venus"></i>
-        </div>
-      )
-    },
+    title: 'Bảo hành sản phẩm',
+    content: 'Chính sách bảo hành thân thiện, đảm bảo đối với khách hàng.',
+    icon: <i className="fas fa-shield-alt"></i>,
   },
   {
-    dataType: TableDataType.Text,
-    fieldName: 'email',
-    title: 'Email',
-    minWidth: 160,
+    title: 'Thanh toán ngay khi nhận hàng',
+    content: 'Thanh toán ngay khi nhận sản phẩm và xác nhận giấy tờ.',
+    icon: <i className="fas fa-dollar-sign"></i>,
   },
   {
-    dataType: TableDataType.Date,
-    align: TableAlign.Center,
-    fieldName: 'birthday',
-    title: 'Ngày sinh',
-    width: 180,
-    minWidth: 180,
-  },
-  {
-    dataType: TableDataType.Money,
-    align: TableAlign.Right,
-    fieldName: 'salary',
-    title: 'Lương',
-    width: 180,
-    minWidth: 180,
+    title: 'Phục vụ mọi nơi',
+    content: 'Phục vụ tận tình, mọi lúc, mọi nơi trên toàn quốc.',
+    icon: <i className="fa-solid fa-map"></i>,
   },
 ]
 
-const USERS: User[] = [
+const PRODUCTS: CardProduct[] = [
   {
     id: '1',
-    name: 'Nguyễn Văn A',
-    gender: true,
-    email: 'nva@gmail.com',
-    birthday: new Date(2023, 3, 12),
-    salary: 10000,
+    code: '1',
+    name: 'Thịt bò kobe',
+    categoryId: '1',
+    image:
+      'https://lh3.googleusercontent.com/iyLgQAoe8ubQ7soDd6qKyTeNpVSJ3iEmfpaA8JHAfkOekjWgUm0gn6-cmKbYS9nlydufEd4poGFyJA8P8ID0i9u6mJBX1Aur4nYicFN3RG0NlJpqX9_nAk2ZCx690nPk3CZw53eJrYfspgKi3a0tHTxMnnVs5pkVF2FRVL88MUZxEaxwS36AfvlCY-OPnuNd1OGCOtrmfBr_lYsaiHR1yqd2rrLK1lQPhbD6hpu1sDr15ttkY96Fsqz07-4A6vKxO73p39aeHDYn97alBkRt7TRRf_O-cDeN1gDiDdGJk3MjfBInLBe0Qm-5FSLeQKFjpKMW1jdkDPiyo4ufB3_PE-FoL296TVQWpY9NYnK7z3XUlxfHNS797Ssj-gJ9A7xGd_o8_62AGGQggiy0w1XaKI90ZbuhEafAs5XhioST7_EkiLL9tGXnuRD_ImYa7U4bqQNwCBS4kJK_RShd_mjeRPDyrwWVeMwElEZDoUof3f9PrP8QOre9-bVcli_4C9wGr9639fCBV8rpMinASmRis036SU49tKQp-HG0nI8SYz-Js8USfrAbRrcDtwIb_EAzsLoPmplwLCoBcFSF-LaFuqhziIh6ntzcQKZGH3kSpl5BmP76jPh7uHocE6zGELMcq-C9EQq11yY9SUEYJzvhPOtJr0oNa4uhKwbh2UdS32V7SN2F0vi61kXbSEEUDRvI8M_ogPgQrtgfs_8SPjXCwWW-bpmo9cCIYl1XC-OQkyldkChaCJVrYA_UNnU5JBcZwibLvKqUE1JVMIgUfC-ETh4hDdmVb4n23tTkLc0IomSEu6L3XM7JtGPeLrmgZ9YMM50-sthua7GqD9W4-4crv6yOa0CCFpGxOLQ3FjWyaAJkUHitKzeLCCzZ8DJQuApoK6rLuNtgkjeo9kOLVmcU-57n09kWayF3t2cXYFuSObFvww=w598-h846-no?authuser=0',
+    price: 50000,
+    unit: '1kg',
   },
   {
     id: '2',
-    name: 'Nguyễn Văn B',
-    gender: true,
-    email: 'nvb@gmail.com',
-    birthday: new Date(2022, 3, 12),
-    salary: 100000,
+    code: '2',
+    name: 'Test 2',
+    categoryId: '2',
+    image:
+      'https://lh3.googleusercontent.com/iyLgQAoe8ubQ7soDd6qKyTeNpVSJ3iEmfpaA8JHAfkOekjWgUm0gn6-cmKbYS9nlydufEd4poGFyJA8P8ID0i9u6mJBX1Aur4nYicFN3RG0NlJpqX9_nAk2ZCx690nPk3CZw53eJrYfspgKi3a0tHTxMnnVs5pkVF2FRVL88MUZxEaxwS36AfvlCY-OPnuNd1OGCOtrmfBr_lYsaiHR1yqd2rrLK1lQPhbD6hpu1sDr15ttkY96Fsqz07-4A6vKxO73p39aeHDYn97alBkRt7TRRf_O-cDeN1gDiDdGJk3MjfBInLBe0Qm-5FSLeQKFjpKMW1jdkDPiyo4ufB3_PE-FoL296TVQWpY9NYnK7z3XUlxfHNS797Ssj-gJ9A7xGd_o8_62AGGQggiy0w1XaKI90ZbuhEafAs5XhioST7_EkiLL9tGXnuRD_ImYa7U4bqQNwCBS4kJK_RShd_mjeRPDyrwWVeMwElEZDoUof3f9PrP8QOre9-bVcli_4C9wGr9639fCBV8rpMinASmRis036SU49tKQp-HG0nI8SYz-Js8USfrAbRrcDtwIb_EAzsLoPmplwLCoBcFSF-LaFuqhziIh6ntzcQKZGH3kSpl5BmP76jPh7uHocE6zGELMcq-C9EQq11yY9SUEYJzvhPOtJr0oNa4uhKwbh2UdS32V7SN2F0vi61kXbSEEUDRvI8M_ogPgQrtgfs_8SPjXCwWW-bpmo9cCIYl1XC-OQkyldkChaCJVrYA_UNnU5JBcZwibLvKqUE1JVMIgUfC-ETh4hDdmVb4n23tTkLc0IomSEu6L3XM7JtGPeLrmgZ9YMM50-sthua7GqD9W4-4crv6yOa0CCFpGxOLQ3FjWyaAJkUHitKzeLCCzZ8DJQuApoK6rLuNtgkjeo9kOLVmcU-57n09kWayF3t2cXYFuSObFvww=w598-h846-no?authuser=0',
+    price: 1000000,
+    unit: '1kg',
   },
   {
     id: '3',
-    name: 'Nguyễn Văn C',
-    gender: false,
-    email: 'nvc@gmail.com',
-    birthday: new Date(2023, 6, 12),
-    salary: 80000,
+    code: '3',
+    name: 'Test 3',
+    categoryId: '3',
+    image:
+      'https://lh3.googleusercontent.com/iyLgQAoe8ubQ7soDd6qKyTeNpVSJ3iEmfpaA8JHAfkOekjWgUm0gn6-cmKbYS9nlydufEd4poGFyJA8P8ID0i9u6mJBX1Aur4nYicFN3RG0NlJpqX9_nAk2ZCx690nPk3CZw53eJrYfspgKi3a0tHTxMnnVs5pkVF2FRVL88MUZxEaxwS36AfvlCY-OPnuNd1OGCOtrmfBr_lYsaiHR1yqd2rrLK1lQPhbD6hpu1sDr15ttkY96Fsqz07-4A6vKxO73p39aeHDYn97alBkRt7TRRf_O-cDeN1gDiDdGJk3MjfBInLBe0Qm-5FSLeQKFjpKMW1jdkDPiyo4ufB3_PE-FoL296TVQWpY9NYnK7z3XUlxfHNS797Ssj-gJ9A7xGd_o8_62AGGQggiy0w1XaKI90ZbuhEafAs5XhioST7_EkiLL9tGXnuRD_ImYa7U4bqQNwCBS4kJK_RShd_mjeRPDyrwWVeMwElEZDoUof3f9PrP8QOre9-bVcli_4C9wGr9639fCBV8rpMinASmRis036SU49tKQp-HG0nI8SYz-Js8USfrAbRrcDtwIb_EAzsLoPmplwLCoBcFSF-LaFuqhziIh6ntzcQKZGH3kSpl5BmP76jPh7uHocE6zGELMcq-C9EQq11yY9SUEYJzvhPOtJr0oNa4uhKwbh2UdS32V7SN2F0vi61kXbSEEUDRvI8M_ogPgQrtgfs_8SPjXCwWW-bpmo9cCIYl1XC-OQkyldkChaCJVrYA_UNnU5JBcZwibLvKqUE1JVMIgUfC-ETh4hDdmVb4n23tTkLc0IomSEu6L3XM7JtGPeLrmgZ9YMM50-sthua7GqD9W4-4crv6yOa0CCFpGxOLQ3FjWyaAJkUHitKzeLCCzZ8DJQuApoK6rLuNtgkjeo9kOLVmcU-57n09kWayF3t2cXYFuSObFvww=w598-h846-no?authuser=0',
+    price: 500000,
+    unit: 'Túi',
   },
   {
     id: '4',
-    name: 'Nguyễn Văn D',
-    gender: true,
-    email: 'nvd@gmail.com',
-    birthday: new Date(2023, 3, 12),
-    salary: 40000,
-  },
-  {
-    id: '5',
-    name: 'Nguyễn Văn E',
-    gender: true,
-    email: 'nve@gmail.com',
-    birthday: new Date(2023, 3, 12),
-    salary: 10000,
-  },
-  {
-    id: '6',
-    name: 'Nguyễn Văn F',
-    gender: false,
-    email: 'nvf@gmail.com',
-    birthday: new Date(2023, 3, 12),
-    salary: 30000,
+    code: '4',
+    name: 'Test 4',
+    categoryId: '4',
+    image:
+      'https://lh3.googleusercontent.com/iyLgQAoe8ubQ7soDd6qKyTeNpVSJ3iEmfpaA8JHAfkOekjWgUm0gn6-cmKbYS9nlydufEd4poGFyJA8P8ID0i9u6mJBX1Aur4nYicFN3RG0NlJpqX9_nAk2ZCx690nPk3CZw53eJrYfspgKi3a0tHTxMnnVs5pkVF2FRVL88MUZxEaxwS36AfvlCY-OPnuNd1OGCOtrmfBr_lYsaiHR1yqd2rrLK1lQPhbD6hpu1sDr15ttkY96Fsqz07-4A6vKxO73p39aeHDYn97alBkRt7TRRf_O-cDeN1gDiDdGJk3MjfBInLBe0Qm-5FSLeQKFjpKMW1jdkDPiyo4ufB3_PE-FoL296TVQWpY9NYnK7z3XUlxfHNS797Ssj-gJ9A7xGd_o8_62AGGQggiy0w1XaKI90ZbuhEafAs5XhioST7_EkiLL9tGXnuRD_ImYa7U4bqQNwCBS4kJK_RShd_mjeRPDyrwWVeMwElEZDoUof3f9PrP8QOre9-bVcli_4C9wGr9639fCBV8rpMinASmRis036SU49tKQp-HG0nI8SYz-Js8USfrAbRrcDtwIb_EAzsLoPmplwLCoBcFSF-LaFuqhziIh6ntzcQKZGH3kSpl5BmP76jPh7uHocE6zGELMcq-C9EQq11yY9SUEYJzvhPOtJr0oNa4uhKwbh2UdS32V7SN2F0vi61kXbSEEUDRvI8M_ogPgQrtgfs_8SPjXCwWW-bpmo9cCIYl1XC-OQkyldkChaCJVrYA_UNnU5JBcZwibLvKqUE1JVMIgUfC-ETh4hDdmVb4n23tTkLc0IomSEu6L3XM7JtGPeLrmgZ9YMM50-sthua7GqD9W4-4crv6yOa0CCFpGxOLQ3FjWyaAJkUHitKzeLCCzZ8DJQuApoK6rLuNtgkjeo9kOLVmcU-57n09kWayF3t2cXYFuSObFvww=w598-h846-no?authuser=0',
+    price: 270000,
+    unit: '1kg',
   },
 ]
 
 export default function Home() {
-  const [userName, setUserName] = useState<string>('')
-  const [password, setPassword] = useState<string>('')
-  const [isRembember, setIsRemeber] = useState<boolean>(false)
-  const [gender, setGender] = useState<string>('male')
-  const [selectedOption, setSelectedOption] = useState<string | number | null>(1)
-  const [thumbnail, setThumbnail] = useState<string>('')
-  const [images, setImages] = useState<string[]>([])
-  const [isActivePopup, setIsActivePopup] = useState<boolean>(false)
-  const [selectedRows, setSelectedRows] = useState<User[]>([])
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [sliderHeight, setSliderHeight] = useState(620)
 
-  const handleChangeUserName = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUserName(e.target.value)
-  }
+  useEffect(() => {
+    const handleResizeFunc = (e: Event) => {
+      const target = e.target as Window
+      if (target.innerWidth > 1024) {
+        setSliderHeight(620)
+      } else {
+        setSliderHeight(274)
+      }
+    }
 
-  const handleChangePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value)
-  }
+    window.addEventListener('resize', handleResizeFunc)
 
-  const handleChangeIsRemeber = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsRemeber(e.target.checked)
-  }
-
-  const handleChangeGender = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(e.target.value)
-    setGender(e.target.value)
-  }
-
-  const handleChangeSelectedOption = (optionValue: string | number | null) => {
-    setSelectedOption(optionValue)
-  }
-
-  const handleChangeThumbnail = (fileUrl: string) => {
-    setThumbnail(fileUrl)
-  }
-
-  const handleChangeImages = (fileUrls: string[]) => {
-    setImages(fileUrls)
-  }
-
-  const openPopup = () => {
-    setIsActivePopup(true)
-  }
-
-  const closePopup = () => {
-    setIsActivePopup(false)
-  }
-
-  const handleSelectRows = (newSelectedRows: any[]) => {
-    setSelectedRows(newSelectedRows)
-  }
+    return () => {
+      window.removeEventListener('resize', handleResizeFunc)
+    }
+  }, [])
 
   return (
     <>
       <Head>
-        <title>Create Next App</title>
+        <title>Trang chủ</title>
         <meta name="description" content="Generated by create next app" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="flex flex-col items-center gap-y-2 min-h-[200vh]">
-        <div className="text-xl text-primary">hello</div>
-
-        {/* Select */}
-        <div className="hidden flex-col items-center justify-center gap-y-2">
-          <div className="w-52">
-            <MySelect
-              id="selectedOption1"
-              name="selectedOption"
-              label="Động vật yêu thích"
-              value={selectedOption}
-              options={OPTIONS}
-              onChange={handleChangeSelectedOption}
-            />
-          </div>
-          <div className="w-52">
-            <MySelect
-              id="selectedOption2"
-              name="selectedOption"
-              label="Động vật yêu thích"
-              required={true}
-              error="Chó này"
-              value={selectedOption}
-              options={OPTIONS}
-              onChange={handleChangeSelectedOption}
-            />
-          </div>
-          <div className="w-52">
-            <MySelect
-              id="selectedOption3"
-              name="selectedOption"
-              label="Động vật yêu thích"
-              required={true}
-              startIcon={<i className="fa-solid fa-code"></i>}
-              error="Chó này"
-              value={selectedOption}
-              options={OPTIONS}
-              onChange={handleChangeSelectedOption}
-            />
-          </div>
+      <main ref={containerRef} className="">
+        <div className="w-full h-[274px] lg:h-[620px]">
+          <MySlider images={IMAGES} height={sliderHeight} />
         </div>
 
-        {/* Button */}
-        <div className="hidden flex-col items-center justify-center gap-y-2">
-          <h3>Button</h3>
-          <MyButton
-            text="Mua hàng tại đây"
-            startIcon={<i className="fa-solid fa-magnifying-glass"></i>}
-          />
-          <MyButton title="Tìm kiếm" startIcon={<i className="fa-solid fa-magnifying-glass"></i>} />
-          <MyButton
-            startIcon={<i className="fa-solid fa-magnifying-glass"></i>}
-            text="Button with start and end icons"
-            endIcon={<i className="fa-solid fa-code"></i>}
-          />
-          <MyButton text="Button secondary" type={MyButtonType.Secondary} />
-        </div>
-
-        {/* TextField */}
-        <div className="hidden flex-col items-center justify-center gap-y-2">
-          <div className="w-52">
-            <MyTextField
-              id="userName"
-              name="userName"
-              label="Tên đăng nhập"
-              required={true}
-              error="Sai tên đăng nhập hoặc mật khẩu"
-              value={userName}
-              onChange={handleChangeUserName}
-            />
+        <div className="w-full px-6 lg:w-[1200px] lg:px-0 lg:mx-auto">
+          <div className="w-full grid grid-cols-1 gap-5 lg:grid-cols-3 mt-14">
+            {IMAGES_2.map((image, index) => (
+              <div
+                key={index}
+                className="rounded-2xl overflow-hidden w-full h-[380px] lg:h-[166px]"
+              >
+                <Image
+                  src={image}
+                  alt={`${index}`}
+                  className="object-center object-cover w-full h-full"
+                />
+              </div>
+            ))}
           </div>
-          <div className="w-52">
-            <MyPasswordField
-              id="password"
-              name="password"
-              label="Mật khẩu"
-              required={true}
-              value={password}
-              onChange={handleChangePassword}
-            />
+
+          <div className="mt-8">
+            <h2 className="text-center font-bold text-3xl mb-6">Sản phẩm gợi ý</h2>
+            <ProductCardList>
+              {PRODUCTS.map((product) => (
+                <ProductCard product={product} key={product.id} />
+              ))}
+            </ProductCardList>
+            <div className="mt-8 flex items-center justify-center">
+              <MyButton
+                text="Xem tất cả sản phẩm"
+                endIcon={<i className="fa-solid fa-chevron-right"></i>}
+                type={MyButtonType.PrimarySolid}
+                style={{
+                  padding: '0 32px',
+                  height: '42px',
+                }}
+              />
+            </div>
           </div>
-          <div className="w-52">
-            <MyTextField
-              id="startIcon"
-              name="startIcon"
-              label="StartIcon"
-              startIcon={<i className="fa-solid fa-code"></i>}
-              value={password}
-              onChange={handleChangePassword}
-            />
+
+          <div className="mt-8">
+            <h2 className="text-center font-bold text-3xl mb-6">Sản phẩm gợi ý</h2>
+            <ProductCardList>
+              {PRODUCTS.map((product) => (
+                <ProductCard product={product} key={product.id} />
+              ))}
+            </ProductCardList>
+            <div className="mt-8 flex items-center justify-center">
+              <MyButton
+                text="Xem tất cả sản phẩm"
+                endIcon={<i className="fa-solid fa-chevron-right"></i>}
+                type={MyButtonType.PrimarySolid}
+                style={{
+                  padding: '0 32px',
+                  height: '42px',
+                }}
+              />
+            </div>
           </div>
-          <div className="w-52">
-            <MyTextField
-              id="endIcon"
-              name="endIcon"
-              label="EndIcon"
-              endIcon={<i className="fa-solid fa-code"></i>}
-              startIcon={<i className="fa-solid fa-code"></i>}
-              error="hello"
-              value={password}
-              onChange={handleChangePassword}
-            />
+
+          <div className="grid grid-cols-3 gap-6 text-center mt-10">
+            {WHY_CHOOSE.map((item, idx) => (
+              <div key={idx}>
+                <span className="text-4xl text-[#444]">{item.icon}</span>
+                <h3 className="text-2xl font-medium text-[#444] h-[50px] mb-0 mt-[30px]">
+                  {item.title}
+                </h3>
+                <p className="max-w-[300px] mx-auto mt-5 mb-[30px] text-base">{item.content}</p>
+                <MyButton text="Mua sắm ngay" type={MyButtonType.PrimarySolid} />
+              </div>
+            ))}
           </div>
-        </div>
 
-        {/* Checkbox */}
-        <div className="hidden flex-col items-center justify-center gap-y-2">
-          <MyCheckbox
-            id="isRemeber"
-            name="isRemeber"
-            label="Nhớ đăng nhập"
-            checked={isRembember}
-            onChange={handleChangeIsRemeber}
-          />
-        </div>
-
-        {/* Radio */}
-        <div className="hidden flex-col items-center justify-center gap-y-2">
-          <MyRadio
-            id="genderMale"
-            name="gender"
-            label="Nam"
-            value="male"
-            checked={gender === 'male' ? true : false}
-            onChange={handleChangeGender}
-          />
-          <MyRadio
-            id="genderFemale"
-            name="gender"
-            label="Nữ"
-            value="female"
-            checked={gender === 'female' ? true : false}
-            onChange={handleChangeGender}
-          />
-        </div>
-
-        {/* Thumbnail */}
-        <div className="hidden flex-col items-center justify-center gap-y-2">
-          <div className="w-96">
-            <MyUploadThumbnail
-              id="thumbnail"
-              name="thumbnail"
-              label="Ảnh đại diện sản phẩm"
-              required={true}
-              error="alo"
-              width={384}
-              height={384}
-              value={thumbnail}
-              onChange={handleChangeThumbnail}
-            />
+          <div className="bg-white rounded-2xl grid grid-cols-2 lg:grid-cols-4 pt-[50px] px-[50px] pb-8 gap-6 text-center mt-8">
+            {WHY_CHOOSE_2.map((item, idx) => (
+              <div key={idx} className="grid grid-cols-[70px_1fr] gap-x-5 w-full">
+                <div className="text-2xl leading-none flex p-4 h-[70px] w-[70px] justify-center items-center border-2 border-[#777] rounded-full mr-[10px]">
+                  {item.icon}
+                </div>
+                <div className="text-center">
+                  <h3 className="mt-0 text-base text-primary font-medium mb-2 text-left">
+                    {item.title}
+                  </h3>
+                  <p className="mt-0 text-sm text-[#777] mb-0 text-justify">{item.content}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-
-        {/* Images */}
-        <div className="flex flex-col items-center justify-center gap-y-2">
-          <div className="w-96">
-            <MyUploadImages
-              id="images"
-              name="images"
-              label="Hình ảnh sản phẩm"
-              value={images}
-              onChange={handleChangeImages}
-            />
-          </div>
-          <div className="w-96">
-            <MyUploadImages
-              id="images"
-              name="images"
-              label="Hình ảnh sản phẩm"
-              required={true}
-              error="Có lỗi"
-              value={images}
-              onChange={handleChangeImages}
-            />
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="w-[80%]">
-          <MyTable
-            columns={COLUMNS}
-            data={USERS}
-            checkable={true}
-            rowIdField="id"
-            tableHeight={200}
-            haveRowIndex={true}
-            selectedRows={selectedRows}
-            stickyFirstColumn={true}
-            editIcon={
-              <i className="fa-solid fa-pen-to-square text-lg leading-none text-gray-700 cursor-pointer transition-colors hover:text-primary"></i>
-            }
-            deleteIcon={
-              <i className="fa-solid fa-trash ext-lg text-gray-700 leading-none cursor-pointer transition-colors hover:text-red-600"></i>
-            }
-            onSelectRows={handleSelectRows}
-            onEdit={(e: any) => console.log(e)}
-            onDelete={(e: any) => console.log(e)}
-          />
-        </div>
-
-        {/* Slider */}
-        <div className="flex flex-col items-center justify-center gap-y-2">
-          <MySlider images={IMAGES} />
-        </div>
-
-        {/* Popup */}
-        <div className="flex flex-col items-center justify-center gap-y-2">
-          <MyButton text="Mở popup" onClick={openPopup} />
-          <MyPopup isActive={isActivePopup} title="Popup thử nghiệm" onClose={closePopup}>
-            <div className="w-96 h-96 italic">hello</div>
-          </MyPopup>
         </div>
       </main>
     </>

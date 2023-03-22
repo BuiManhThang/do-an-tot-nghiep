@@ -63,7 +63,7 @@ const MyUploadImages = ({
         <label
           htmlFor={isLoading ? '' : id}
           title={isLoading ? 'Đang tải' : ''}
-          className={`sticky z-[11] left-0 w-[94px] h-full flex items-center shrink-0 bg-white`}
+          className={`sticky z-[2] left-0 w-[94px] h-full flex items-center shrink-0 bg-white`}
         >
           <div
             className={`ml-2 relative cursor-pointer w-20 h-[70px] flex flex-col items-center justify-center text-white bg-gray-400 rounded-md transition-colors ${
@@ -99,7 +99,7 @@ const MyUploadImages = ({
               />
               <div
                 title="Xóa"
-                className="bg-gray-400 text-white absolute w-4 h-4 -top-1 -right-1 flex items-center justify-center rounded-full text-xs cursor-pointer transition-colors hover:bg-red-600 z-10"
+                className="bg-gray-400 text-white absolute w-4 h-4 -top-1 -right-1 flex items-center justify-center rounded-full text-xs cursor-pointer transition-colors hover:bg-red-600 z-[1]"
                 onClick={() => removeImage(imageIndex)}
               >
                 <i className="fa-solid fa-xmark"></i>

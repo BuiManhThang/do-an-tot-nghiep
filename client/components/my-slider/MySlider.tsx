@@ -9,9 +9,9 @@ type Props = {
   images: StaticImageData[] | string[]
 }
 
-const MySlider = ({ height = 500, width = 800, images }: Props) => {
+const MySlider = ({ height = 500, width, images }: Props) => {
   const imageStyle = {
-    width: `${width}px`,
+    width: width ? `${width}px` : '100%',
     height: `${height}px`,
   }
 
