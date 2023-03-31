@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 type Props = {
   isActive?: boolean
   children?: React.ReactNode[] | React.ReactNode
-  title?: string
+  title?: string | React.ReactNode | React.ReactNode[]
   footer?: React.ReactNode
   onClose?: () => void
 }
@@ -72,7 +72,7 @@ const MyPopup = ({ isActive = false, children, title, footer, onClose }: Props) 
         <div className="pb-4 px-6">{children}</div>
 
         {/* Footer */}
-        <div></div>
+        <div className="pb-4 px-6">{footer}</div>
       </div>
     </div>
   )

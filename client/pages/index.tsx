@@ -4,7 +4,7 @@ import MySlider from '@/components/my-slider/MySlider'
 import ProductCardList from '@/components/product-card-list/ProductCardList'
 import ProductCard from '@/components/product-card/ProductCard'
 import Image from 'next/image'
-import { CardProduct } from '@/types/product'
+import { CardProduct, Product } from '@/types/product'
 
 import Image1 from '../assets/images/test/1.jpg'
 import Image2 from '../assets/images/test/2.jpg'
@@ -12,7 +12,10 @@ import Image3 from '../assets/images/test/3.jpg'
 import Image4 from '../assets/images/test/4.jpg'
 import Image5 from '../assets/images/test/5.jpg'
 import MyButton, { MyButtonType } from '@/components/my-button/MyButton'
-import Link from 'next/link'
+import { PagingResult } from '@/types/paging'
+import baseApi from '@/apis/baseApi'
+import { Category } from '@/types/category'
+import { useAppSelector } from '@/hooks/reduxHook'
 
 const IMAGES = [Image1, Image2, Image3, Image4, Image5]
 const IMAGES_2 = [Image3, Image4, Image5]
@@ -61,51 +64,52 @@ const WHY_CHOOSE_2 = [
   },
 ]
 
-const PRODUCTS: CardProduct[] = [
-  {
-    id: '1',
-    code: '1',
-    name: 'Thịt bò kobe',
-    categoryId: '1',
-    image:
-      'https://lh3.googleusercontent.com/iyLgQAoe8ubQ7soDd6qKyTeNpVSJ3iEmfpaA8JHAfkOekjWgUm0gn6-cmKbYS9nlydufEd4poGFyJA8P8ID0i9u6mJBX1Aur4nYicFN3RG0NlJpqX9_nAk2ZCx690nPk3CZw53eJrYfspgKi3a0tHTxMnnVs5pkVF2FRVL88MUZxEaxwS36AfvlCY-OPnuNd1OGCOtrmfBr_lYsaiHR1yqd2rrLK1lQPhbD6hpu1sDr15ttkY96Fsqz07-4A6vKxO73p39aeHDYn97alBkRt7TRRf_O-cDeN1gDiDdGJk3MjfBInLBe0Qm-5FSLeQKFjpKMW1jdkDPiyo4ufB3_PE-FoL296TVQWpY9NYnK7z3XUlxfHNS797Ssj-gJ9A7xGd_o8_62AGGQggiy0w1XaKI90ZbuhEafAs5XhioST7_EkiLL9tGXnuRD_ImYa7U4bqQNwCBS4kJK_RShd_mjeRPDyrwWVeMwElEZDoUof3f9PrP8QOre9-bVcli_4C9wGr9639fCBV8rpMinASmRis036SU49tKQp-HG0nI8SYz-Js8USfrAbRrcDtwIb_EAzsLoPmplwLCoBcFSF-LaFuqhziIh6ntzcQKZGH3kSpl5BmP76jPh7uHocE6zGELMcq-C9EQq11yY9SUEYJzvhPOtJr0oNa4uhKwbh2UdS32V7SN2F0vi61kXbSEEUDRvI8M_ogPgQrtgfs_8SPjXCwWW-bpmo9cCIYl1XC-OQkyldkChaCJVrYA_UNnU5JBcZwibLvKqUE1JVMIgUfC-ETh4hDdmVb4n23tTkLc0IomSEu6L3XM7JtGPeLrmgZ9YMM50-sthua7GqD9W4-4crv6yOa0CCFpGxOLQ3FjWyaAJkUHitKzeLCCzZ8DJQuApoK6rLuNtgkjeo9kOLVmcU-57n09kWayF3t2cXYFuSObFvww=w598-h846-no?authuser=0',
-    price: 50000,
-    unit: '1kg',
-  },
-  {
-    id: '2',
-    code: '2',
-    name: 'Test 2',
-    categoryId: '2',
-    image:
-      'https://lh3.googleusercontent.com/iyLgQAoe8ubQ7soDd6qKyTeNpVSJ3iEmfpaA8JHAfkOekjWgUm0gn6-cmKbYS9nlydufEd4poGFyJA8P8ID0i9u6mJBX1Aur4nYicFN3RG0NlJpqX9_nAk2ZCx690nPk3CZw53eJrYfspgKi3a0tHTxMnnVs5pkVF2FRVL88MUZxEaxwS36AfvlCY-OPnuNd1OGCOtrmfBr_lYsaiHR1yqd2rrLK1lQPhbD6hpu1sDr15ttkY96Fsqz07-4A6vKxO73p39aeHDYn97alBkRt7TRRf_O-cDeN1gDiDdGJk3MjfBInLBe0Qm-5FSLeQKFjpKMW1jdkDPiyo4ufB3_PE-FoL296TVQWpY9NYnK7z3XUlxfHNS797Ssj-gJ9A7xGd_o8_62AGGQggiy0w1XaKI90ZbuhEafAs5XhioST7_EkiLL9tGXnuRD_ImYa7U4bqQNwCBS4kJK_RShd_mjeRPDyrwWVeMwElEZDoUof3f9PrP8QOre9-bVcli_4C9wGr9639fCBV8rpMinASmRis036SU49tKQp-HG0nI8SYz-Js8USfrAbRrcDtwIb_EAzsLoPmplwLCoBcFSF-LaFuqhziIh6ntzcQKZGH3kSpl5BmP76jPh7uHocE6zGELMcq-C9EQq11yY9SUEYJzvhPOtJr0oNa4uhKwbh2UdS32V7SN2F0vi61kXbSEEUDRvI8M_ogPgQrtgfs_8SPjXCwWW-bpmo9cCIYl1XC-OQkyldkChaCJVrYA_UNnU5JBcZwibLvKqUE1JVMIgUfC-ETh4hDdmVb4n23tTkLc0IomSEu6L3XM7JtGPeLrmgZ9YMM50-sthua7GqD9W4-4crv6yOa0CCFpGxOLQ3FjWyaAJkUHitKzeLCCzZ8DJQuApoK6rLuNtgkjeo9kOLVmcU-57n09kWayF3t2cXYFuSObFvww=w598-h846-no?authuser=0',
-    price: 1000000,
-    unit: '1kg',
-  },
-  {
-    id: '3',
-    code: '3',
-    name: 'Test 3',
-    categoryId: '3',
-    image:
-      'https://lh3.googleusercontent.com/iyLgQAoe8ubQ7soDd6qKyTeNpVSJ3iEmfpaA8JHAfkOekjWgUm0gn6-cmKbYS9nlydufEd4poGFyJA8P8ID0i9u6mJBX1Aur4nYicFN3RG0NlJpqX9_nAk2ZCx690nPk3CZw53eJrYfspgKi3a0tHTxMnnVs5pkVF2FRVL88MUZxEaxwS36AfvlCY-OPnuNd1OGCOtrmfBr_lYsaiHR1yqd2rrLK1lQPhbD6hpu1sDr15ttkY96Fsqz07-4A6vKxO73p39aeHDYn97alBkRt7TRRf_O-cDeN1gDiDdGJk3MjfBInLBe0Qm-5FSLeQKFjpKMW1jdkDPiyo4ufB3_PE-FoL296TVQWpY9NYnK7z3XUlxfHNS797Ssj-gJ9A7xGd_o8_62AGGQggiy0w1XaKI90ZbuhEafAs5XhioST7_EkiLL9tGXnuRD_ImYa7U4bqQNwCBS4kJK_RShd_mjeRPDyrwWVeMwElEZDoUof3f9PrP8QOre9-bVcli_4C9wGr9639fCBV8rpMinASmRis036SU49tKQp-HG0nI8SYz-Js8USfrAbRrcDtwIb_EAzsLoPmplwLCoBcFSF-LaFuqhziIh6ntzcQKZGH3kSpl5BmP76jPh7uHocE6zGELMcq-C9EQq11yY9SUEYJzvhPOtJr0oNa4uhKwbh2UdS32V7SN2F0vi61kXbSEEUDRvI8M_ogPgQrtgfs_8SPjXCwWW-bpmo9cCIYl1XC-OQkyldkChaCJVrYA_UNnU5JBcZwibLvKqUE1JVMIgUfC-ETh4hDdmVb4n23tTkLc0IomSEu6L3XM7JtGPeLrmgZ9YMM50-sthua7GqD9W4-4crv6yOa0CCFpGxOLQ3FjWyaAJkUHitKzeLCCzZ8DJQuApoK6rLuNtgkjeo9kOLVmcU-57n09kWayF3t2cXYFuSObFvww=w598-h846-no?authuser=0',
-    price: 500000,
-    unit: 'Túi',
-  },
-  {
-    id: '4',
-    code: '4',
-    name: 'Test 4',
-    categoryId: '4',
-    image:
-      'https://lh3.googleusercontent.com/iyLgQAoe8ubQ7soDd6qKyTeNpVSJ3iEmfpaA8JHAfkOekjWgUm0gn6-cmKbYS9nlydufEd4poGFyJA8P8ID0i9u6mJBX1Aur4nYicFN3RG0NlJpqX9_nAk2ZCx690nPk3CZw53eJrYfspgKi3a0tHTxMnnVs5pkVF2FRVL88MUZxEaxwS36AfvlCY-OPnuNd1OGCOtrmfBr_lYsaiHR1yqd2rrLK1lQPhbD6hpu1sDr15ttkY96Fsqz07-4A6vKxO73p39aeHDYn97alBkRt7TRRf_O-cDeN1gDiDdGJk3MjfBInLBe0Qm-5FSLeQKFjpKMW1jdkDPiyo4ufB3_PE-FoL296TVQWpY9NYnK7z3XUlxfHNS797Ssj-gJ9A7xGd_o8_62AGGQggiy0w1XaKI90ZbuhEafAs5XhioST7_EkiLL9tGXnuRD_ImYa7U4bqQNwCBS4kJK_RShd_mjeRPDyrwWVeMwElEZDoUof3f9PrP8QOre9-bVcli_4C9wGr9639fCBV8rpMinASmRis036SU49tKQp-HG0nI8SYz-Js8USfrAbRrcDtwIb_EAzsLoPmplwLCoBcFSF-LaFuqhziIh6ntzcQKZGH3kSpl5BmP76jPh7uHocE6zGELMcq-C9EQq11yY9SUEYJzvhPOtJr0oNa4uhKwbh2UdS32V7SN2F0vi61kXbSEEUDRvI8M_ogPgQrtgfs_8SPjXCwWW-bpmo9cCIYl1XC-OQkyldkChaCJVrYA_UNnU5JBcZwibLvKqUE1JVMIgUfC-ETh4hDdmVb4n23tTkLc0IomSEu6L3XM7JtGPeLrmgZ9YMM50-sthua7GqD9W4-4crv6yOa0CCFpGxOLQ3FjWyaAJkUHitKzeLCCzZ8DJQuApoK6rLuNtgkjeo9kOLVmcU-57n09kWayF3t2cXYFuSObFvww=w598-h846-no?authuser=0',
-    price: 270000,
-    unit: '1kg',
-  },
-]
+type CategoryWithProducts = {
+  id: string
+  name: string
+  products: Product[]
+}
+
+const getPagingProducts = async (categoryId: string): Promise<Product[]> => {
+  const res = await baseApi.get('products/paging', {
+    categoryId: categoryId,
+    pageIndex: 1,
+    pageSize: 8,
+    sort: 'code',
+    direction: 'desc',
+  })
+  const pagingResult: PagingResult = res.data
+  const products: Product[] = pagingResult.data
+  return products
+}
+
+const getCategoryWithProductsFunc = async (categories: Category[]) => {
+  const queryFuncs: Promise<Product[]>[] = []
+  const result: CategoryWithProducts[] = []
+  for (let index = 0; index < categories.length; index++) {
+    if (index === 4) {
+      break
+    }
+    const category = categories[index]
+    result.push({
+      id: category.id,
+      name: category.name,
+      products: [],
+    })
+    queryFuncs.push(getPagingProducts(category.id))
+  }
+  const res = await Promise.all(queryFuncs)
+  res.forEach((products, index) => {
+    result[index].products = products
+  })
+
+  return result
+}
 
 export default function Home() {
+  const categories = useAppSelector((state) => state.navbar.categories)
   const containerRef = useRef<HTMLDivElement>(null)
+  const [categoryWithProducts, setCategoryWithProducts] = useState<CategoryWithProducts[]>([])
   const [sliderHeight, setSliderHeight] = useState(620)
 
   useEffect(() => {
@@ -125,6 +129,21 @@ export default function Home() {
     }
   }, [])
 
+  useEffect(() => {
+    const getCategoryWithProducts = async () => {
+      try {
+        const res = await getCategoryWithProductsFunc(categories)
+        setCategoryWithProducts(res)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    if (categories.length) {
+      getCategoryWithProducts()
+    }
+  }, [categories])
+
   return (
     <>
       <Head>
@@ -143,18 +162,22 @@ export default function Home() {
             {IMAGES_2.map((image, index) => (
               <div
                 key={index}
-                className="rounded-2xl overflow-hidden w-full h-[380px] lg:h-[166px]"
+                className="rounded-2xl overflow-hidden w-full h-[380px] lg:h-[166px] relative"
               >
                 <Image
                   src={image}
                   alt={`${index}`}
+                  fill={true}
+                  sizes="(max-width: 768px) 100vw,
+                          (max-width: 1200px) 50vw,
+                          33vw"
                   className="object-center object-cover w-full h-full"
                 />
               </div>
             ))}
           </div>
 
-          <div className="mt-8">
+          {/* <div className="mt-8">
             <h2 className="text-center font-bold text-3xl mb-6">Sản phẩm gợi ý</h2>
             <ProductCardList>
               {PRODUCTS.map((product) => (
@@ -172,27 +195,31 @@ export default function Home() {
                 }}
               />
             </div>
-          </div>
+          </div> */}
 
-          <div className="mt-8">
-            <h2 className="text-center font-bold text-3xl mb-6">Sản phẩm gợi ý</h2>
-            <ProductCardList>
-              {PRODUCTS.map((product) => (
-                <ProductCard product={product} key={product.id} />
-              ))}
-            </ProductCardList>
-            <div className="mt-8 flex items-center justify-center">
-              <MyButton
-                text="Xem tất cả sản phẩm"
-                endIcon={<i className="fa-solid fa-chevron-right"></i>}
-                type={MyButtonType.PrimarySolid}
-                style={{
-                  padding: '0 32px',
-                  height: '42px',
-                }}
-              />
-            </div>
-          </div>
+          {categoryWithProducts.map((categoryWithProduct, index) => {
+            return (
+              <div className="mt-8" key={index}>
+                <h2 className="text-center font-bold text-3xl mb-6">{categoryWithProduct.name}</h2>
+                <ProductCardList>
+                  {categoryWithProduct.products.map((product) => (
+                    <ProductCard product={product} key={product.id} />
+                  ))}
+                </ProductCardList>
+                <div className="mt-8 flex items-center justify-center">
+                  <MyButton
+                    text="Xem tất cả sản phẩm"
+                    endIcon={<i className="fa-solid fa-chevron-right"></i>}
+                    type={MyButtonType.PrimarySolid}
+                    style={{
+                      padding: '0 32px',
+                      height: '42px',
+                    }}
+                  />
+                </div>
+              </div>
+            )
+          })}
 
           <div className="grid grid-cols-3 gap-6 text-center mt-10">
             {WHY_CHOOSE.map((item, idx) => (

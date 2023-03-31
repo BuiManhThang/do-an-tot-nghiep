@@ -4,15 +4,38 @@ import Image from 'next/image'
 import Link from 'next/link'
 import MyButton from '../my-button/MyButton'
 import { formatMoney } from '@/common/format'
+import { ProductInCart } from '@/types/user'
+import { useAppDispatch } from '@/hooks/reduxHook'
+import { addToCart } from '@/store/reducers/cartSlice'
+import { useToastMsg } from '@/hooks/toastMsgHook'
+import { ToastMsgType } from '@/enum/toastMsg'
 
 type Props = {
   product: CardProduct
 }
 
 const ProductCard = ({ product }: Props) => {
+  const { openToast } = useToastMsg()
+  const dispatch = useAppDispatch()
+
   const handleClickAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
-    console.log('alo')
+    const addedProduct: ProductInCart = {
+      amount: 1,
+      id: product.id,
+      name: product.name,
+      categoryId: product.categoryId,
+      categoryName: product.category.name,
+      code: product.code,
+      image: product.image,
+      price: product.price,
+      unit: product.unit,
+    }
+    dispatch(addToCart(addedProduct))
+    openToast({
+      msg: 'Thêm sản phẩm vào giỏ hàng thành công',
+      type: ToastMsgType.Success,
+    })
   }
 
   return (
@@ -25,6 +48,7 @@ const ProductCard = ({ product }: Props) => {
           src={product.image}
           alt={product.name}
           fill={true}
+          sizes="(max-width: 1018px) 417px, 285px"
           className="object-cover object-center"
         />
         <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center group-hover:backdrop-blur-[2px]">

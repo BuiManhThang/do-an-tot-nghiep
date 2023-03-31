@@ -1,12 +1,14 @@
-import React, { ReactElement } from 'react'
-import styles from './MyTextField.module.css'
+import React, { ReactElement, useEffect, useRef } from 'react'
+import MyLoadingSkeleton from '../my-loading-skeleton/MyLoadingSkeleton'
+import IMask from 'imask'
+import { formatMoney } from '@/common/format'
 
 type MyTextFieldProps = {
   id: string
   name?: string
   label?: string
   placeholder?: string
-  value?: string
+  value?: string | number
   error?: string
   type?: string
   autoComplete?: string
@@ -15,6 +17,12 @@ type MyTextFieldProps = {
   required?: boolean
   startIcon?: HTMLElement | ReactElement
   endIcon?: HTMLElement | ReactElement
+  disabled?: boolean
+  inputRef?: React.Ref<HTMLInputElement> | null
+  isParentLoading?: boolean
+  min?: number
+  max?: number
+  thousandsSeparator?: string
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
   onClickStartIcon?: (e: React.MouseEvent<HTMLDivElement>) => void
   onClickEndIcon?: (e: React.MouseEvent<HTMLDivElement>) => void
@@ -34,16 +42,48 @@ const MyTextField = ({
   required = false,
   startIcon,
   endIcon,
+  isParentLoading = false,
+  disabled = false,
+  inputRef,
+  min,
+  max,
+  thousandsSeparator = '.',
   onChange,
   onClickStartIcon,
   onClickEndIcon,
 }: MyTextFieldProps) => {
-  let inputClassName = `h-9 border border-gray-400 rounded-md outline-none ring-primary-ring caret-primary px-3 w-full transition-colors focus:border-primary focus:ring-2 ${
+  const containerRef = useRef<HTMLDivElement>(null)
+  // useEffect(() => {
+  //   if (isParentLoading === false && type === 'number') {
+  //     const input: HTMLElement | null | undefined = containerRef.current?.querySelector(`#${id}`)
+  //     if (input) {
+  //       const mask = IMask(input, {
+  //         mask: Number,
+  //         min: min,
+  //         max: max,
+  //         thousandsSeparator: thousandsSeparator,
+  //       })
+  //     }
+  //   }
+  // }, [id, isParentLoading, max, min, thousandsSeparator, type])
+
+  if (isParentLoading) {
+    return (
+      <div className={`flex flex-col w-full ${className}`}>
+        {label && <MyLoadingSkeleton className="w-28 h-6 mb-1 rounded-md" />}
+        <MyLoadingSkeleton className="w-full h-9 rounded-md" />
+      </div>
+    )
+  }
+
+  let formattedType = type
+
+  let inputClassName = `h-9 border border-gray-400 rounded-md outline-none ring-primary-ring caret-primary px-3 w-full transition-colors focus:border-primary focus:ring-2 disabled:bg-slate-200 ${
     startIcon ? 'pl-10' : 'pl-3'
   } ${endIcon ? 'pr-10' : ''}`
 
   if (error) {
-    inputClassName = `h-9 border border-red-600 rounded-md outline-none ring-red-200 caret-red-600 w-full transition-colors focus:border-red-600 focus:ring-2 ${
+    inputClassName = `h-9 border border-red-600 rounded-md outline-none ring-red-200 caret-red-600 w-full transition-colors focus:border-red-600 focus:ring-2 disabled:bg-slate-200 ${
       startIcon ? 'pl-10' : 'pl-3'
     } ${endIcon ? 'pr-16' : 'pr-10'}`
   }
@@ -67,11 +107,13 @@ const MyTextField = ({
   }
 
   return (
-    <div className={`flex flex-col w-full ${className}`}>
-      <label htmlFor={id} className="w-max mb-1">
-        {label}
-        {required && <span className="text-red-600 font-medium pl-1">*</span>}
-      </label>
+    <div ref={containerRef} className={`flex flex-col w-full ${className}`}>
+      {label && (
+        <label htmlFor={id} className="w-max mb-1">
+          {label}
+          {required && <span className="text-red-600 font-medium pl-1">*</span>}
+        </label>
+      )}
       <div className="w-full relative">
         {startIcon && (
           <div className="absolute top-1/2 left-3 -translate-y-1/2" onClick={handleClickStartIcon}>
@@ -79,14 +121,16 @@ const MyTextField = ({
           </div>
         )}
         <input
+          ref={inputRef}
           id={id}
           name={name}
-          type={type}
+          type={formattedType}
           value={value}
           autoComplete={autoComplete}
-          className={inputClassName}
+          className={`${inputClassName} ${type === 'number' ? 'text-right' : ''}`}
           placeholder={placeholder}
           style={inputStyle}
+          disabled={disabled}
           onChange={handleChange}
         />
         {endIcon && (

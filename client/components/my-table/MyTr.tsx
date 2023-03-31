@@ -98,6 +98,7 @@ const MyTr = ({
               id={data[rowIdField]}
               name={data[rowIdField]}
               checked={isChecked}
+              size="small"
               onChange={handleCheck}
             />
           </div>
@@ -154,6 +155,9 @@ const MyTr = ({
         }
 
         let rowValue = data[column.fieldName]
+        if (column.childFieldName) {
+          rowValue = rowValue[column.childFieldName]
+        }
         let align = 'text-left'
         switch (column.dataType) {
           case TableDataType.Date:
@@ -203,8 +207,16 @@ const MyTr = ({
           }}
         >
           <div className="flex items-center justify-between">
-            {editIcon && <div onClick={handleClickEdit}>{editIcon}</div>}
-            {deleteIcon && <div onClick={handleClickDelete}>{deleteIcon}</div>}
+            {editIcon && (
+              <div onClick={handleClickEdit} title="Sửa">
+                {editIcon}
+              </div>
+            )}
+            {deleteIcon && (
+              <div onClick={handleClickDelete} title="Xóa">
+                {deleteIcon}
+              </div>
+            )}
           </div>
         </td>
       )}

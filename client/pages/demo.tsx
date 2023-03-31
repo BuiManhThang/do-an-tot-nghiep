@@ -166,7 +166,9 @@ export default function Home() {
   const [password, setPassword] = useState<string>('')
   const [isRembember, setIsRemeber] = useState<boolean>(false)
   const [gender, setGender] = useState<string>('male')
-  const [selectedOption, setSelectedOption] = useState<string | number | null>(1)
+  const [selectedOption, setSelectedOption] = useState<
+    string | number | null | boolean | undefined
+  >(1)
   const [thumbnail, setThumbnail] = useState<string>('')
   const [images, setImages] = useState<string[]>([])
   const [isActivePopup, setIsActivePopup] = useState<boolean>(false)
@@ -189,7 +191,9 @@ export default function Home() {
     setGender(e.target.value)
   }
 
-  const handleChangeSelectedOption = (optionValue: string | number | null) => {
+  const handleChangeSelectedOption = (
+    optionValue: string | number | null | boolean | undefined
+  ) => {
     setSelectedOption(optionValue)
   }
 

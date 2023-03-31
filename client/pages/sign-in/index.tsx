@@ -11,7 +11,6 @@ import { signIn } from '@/store/reducers/userSlice'
 import { useRouter } from 'next/router'
 import { RequestStatus } from '@/enum/requestStatus'
 import { AxiosError, isAxiosError } from 'axios'
-import { ClientError, RequestError } from '@/types/apiResult'
 import { handleClientError } from '@/common/errorHandler'
 
 const VALIDATORS: Validator[] = [

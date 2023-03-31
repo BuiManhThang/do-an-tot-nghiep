@@ -24,9 +24,9 @@ export type Validator = {
 const validateElement = (data: any, validator: Validator): string => {
   const { field, name, rules, custom } = validator
   const dataControl = data[field]
-  if (!dataControl) {
-    return `${name} không được để trống`
-  }
+  // if (!dataControl) {
+  //   return `${name} không được để trống`
+  // }
 
   for (let indexRule = 0; indexRule < rules.length; indexRule++) {
     const rule = rules[indexRule]
@@ -37,17 +37,17 @@ const validateElement = (data: any, validator: Validator): string => {
         }
         break
       case ValidateRule.Email:
-        if (!validateEmail(dataControl)) {
+        if (dataControl && !validateEmail(dataControl)) {
           return `${name} sai định dạng email`
         }
         break
       case ValidateRule.PhoneNumber:
-        if (!validatePhoneNumber(dataControl)) {
+        if (dataControl && !validatePhoneNumber(dataControl)) {
           return `${name} sai định dạng số điện thoại`
         }
         break
       case ValidateRule.Password:
-        if (!validatePassword(dataControl)) {
+        if (dataControl && !validatePassword(dataControl)) {
           return `${name} cần từ 8 đến 32 ký tự bao gồm chữ, số, chữ in hoa`
         }
         break
@@ -88,7 +88,7 @@ export const useValidate = (validators: Validator[]) => {
         isValid = false
       }
     }
-
+    console.log(validateResult)
     setError(validateResult)
     return isValid
   }
@@ -98,5 +98,6 @@ export const useValidate = (validators: Validator[]) => {
     isValidated,
     validate,
     setError,
+    setIsValidated,
   }
 }

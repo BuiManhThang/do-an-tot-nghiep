@@ -10,7 +10,7 @@ type Props = {
         | React.MutableRefObject<HTMLElement | null>
         | React.MouseEvent<HTMLElement>
     ) => void
-  ) => React.ReactNode | React.ReactNode
+  ) => React.ReactNode | React.ReactNode[]
   content: (
     open: boolean,
     close: (
@@ -19,7 +19,7 @@ type Props = {
         | React.MutableRefObject<HTMLElement | null>
         | React.MouseEvent<HTMLElement>
     ) => void
-  ) => React.ReactNode | React.ReactNode
+  ) => React.ReactNode | React.ReactNode[]
   popoverClassName?: string
   targetClassName?: string
   contentClassName?: string

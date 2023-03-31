@@ -1,27 +1,31 @@
 import React, { ReactElement, useEffect, useRef, useState } from 'react'
+import MyLoadingSkeleton from '../my-loading-skeleton/MyLoadingSkeleton'
 
 export type MySelectOption = {
   text: string
-  value: string | number
+  value: string | number | boolean | undefined | null
 }
 
 type MyTextFieldProps = {
   id: string
   name?: string
   label?: string
-  value?: string | number | null
+  value?: string | number | null | boolean
   options?: MySelectOption[]
   error?: string
   className?: string
   inputStyle?: React.CSSProperties
   required?: boolean
+  isHorizontal?: boolean
+  isOptionsTop?: boolean
   displayedItems?: number
+  isParentLoading?: boolean
   startIcon?: HTMLElement | ReactElement
-  onChange?: (selectedOptionValue: string | number | null) => void
+  onChange?: (selectedOptionValue: string | number | boolean | undefined | null) => void
   onClickStartIcon?: (e: React.MouseEvent<HTMLDivElement>) => void
 }
 
-const MyTextField = ({
+const MySelect = ({
   id,
   name,
   label,
@@ -31,7 +35,10 @@ const MyTextField = ({
   className,
   inputStyle,
   required = false,
+  isHorizontal = false,
+  isOptionsTop = false,
   displayedItems = 5,
+  isParentLoading = false,
   startIcon,
   onChange,
   onClickStartIcon,
@@ -59,6 +66,15 @@ const MyTextField = ({
   useEffect(() => {
     setInputValue(selectedOptionText)
   }, [selectedOptionText])
+
+  if (isParentLoading) {
+    return (
+      <div className={`flex flex-col w-full ${className}`}>
+        {label && <MyLoadingSkeleton className="w-28 h-6 mb-1 rounded-md" />}
+        <MyLoadingSkeleton className="w-full h-9 rounded-md" />
+      </div>
+    )
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value)
@@ -91,7 +107,9 @@ const MyTextField = ({
   }
 
   const closeOptions = () => {
-    setIsActive(false)
+    setTimeout(() => {
+      setIsActive(false)
+    }, 100)
   }
 
   const handleMouseEnterOption = (option: MySelectOption, index: number) => {
@@ -144,11 +162,13 @@ const MyTextField = ({
   }
 
   return (
-    <div className={`flex flex-col w-full ${className}`}>
-      <label htmlFor={id} className="w-max mb-1">
-        {label}
-        {required && <span className="text-red-600 font-medium pl-1">*</span>}
-      </label>
+    <div className={`flex w-full ${isHorizontal ? 'items-center' : 'flex-col'} ${className}`}>
+      {label && (
+        <label htmlFor={id} className={`w-max ${isHorizontal ? 'flex-shrink-0 mr-3' : 'mb-1'}`}>
+          {label}
+          {required && <span className="text-red-600 font-medium pl-1">*</span>}
+        </label>
+      )}
       <div className="w-full relative">
         {startIcon && (
           <div className="absolute top-1/2 left-3 -translate-y-1/2" onClick={handleClickStartIcon}>
@@ -182,9 +202,9 @@ const MyTextField = ({
           </div>
         </div>
         <div
-          className={`absolute z-10 top-[calc(100%_+_2px)] left-0 w-full shadow-custom rounded-md overflow-hidden transition-all ${
+          className={`absolute z-10 left-0 w-full shadow-custom rounded-md overflow-hidden transition-all ${
             isActive ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-3'
-          }`}
+          } ${isOptionsTop ? 'bottom-[calc(100%_+_2px)]' : 'top-[calc(100%_+_2px)]'}`}
         >
           <ul
             className="overflow-auto bg-white w-full"
@@ -195,7 +215,7 @@ const MyTextField = ({
             {options.map((option, index) => {
               return (
                 <li
-                  key={option.value}
+                  key={`${option.value}`}
                   className={`px-3 h-9 flex items-center cursor-pointer w-full ${
                     selectedOption?.value === option.value
                       ? 'bg-primary text-white font-medium'
@@ -236,4 +256,4 @@ const MyTextField = ({
   )
 }
 
-export default MyTextField
+export default MySelect

@@ -16,6 +16,7 @@ type MyButtonProps = {
   startIcon?: HTMLElement | ReactElement
   endIcon?: HTMLElement | ReactElement
   isLoading?: boolean
+  disabled?: boolean
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
 }
 
@@ -27,6 +28,7 @@ const MyButton = ({
   startIcon,
   endIcon,
   isLoading = false,
+  disabled = false,
   type = MyButtonType.Primary,
   onClick,
 }: MyButtonProps) => {
@@ -43,14 +45,19 @@ const MyButton = ({
     return (
       <button
         title={title}
-        className={`relative outline-none bg-white border-secondary border hover:bg-secondary-hover focus:bg-secondary-hover focus:ring-2 ring-secondary-ring transition-colors inline-flex items-center h-9 px-3 font-medium text-base rounded-md text-secondary leading-none min-w-fit ${
+        className={`relative outline-none border focus:ring-2 bg-white ring-secondary-ring transition-colors inline-flex items-center h-9 px-3 font-medium text-base rounded-md leading-none min-w-fit ${
           isLoading ? 'cursor-default' : ''
+        } ${
+          disabled
+            ? 'text-secondary-disabled border-secondary-disabled hover:bg-white focus:bg-white'
+            : 'text-secondary border-secondary hover:bg-secondary-hover focus:bg-secondary-hover'
         } ${className}`}
         style={style}
+        disabled={disabled}
         onClick={handleClick}
       >
         {isLoading ? (
-          <MyLoadingCircle />
+          <MyLoadingCircle type="primary" size={24} />
         ) : (
           <>
             {startIcon && startIcon}
@@ -75,10 +82,11 @@ const MyButton = ({
           isLoading ? 'cursor-default' : ''
         } ${className}`}
         style={style}
+        disabled={disabled}
         onClick={handleClick}
       >
         {isLoading ? (
-          <MyLoadingCircle />
+          <MyLoadingCircle size={24} />
         ) : (
           <>
             {startIcon && startIcon}
@@ -98,14 +106,19 @@ const MyButton = ({
   return (
     <button
       title={title}
-      className={`relative outline-none bg-primary hover:bg-primary-hover focus:bg-primary-hover focus:ring-2 ring-primary-ring transition-colors inline-flex items-center h-9 px-3 font-medium text-base rounded-md text-white leading-none min-w-fit ${
+      className={`relative outline-none focus:ring-2 ring-primary-ring transition-colors inline-flex items-center h-9 px-3 font-medium text-base rounded-md text-white leading-none min-w-fit ${
         isLoading ? 'cursor-default' : ''
+      } ${
+        disabled
+          ? 'bg-primary-disabled hover:bg-primary-disabled focus:bg-primary-disabled'
+          : 'bg-primary hover:bg-primary-hover focus:bg-primary-hover'
       } ${className}`}
       style={style}
+      disabled={disabled}
       onClick={handleClick}
     >
       {isLoading ? (
-        <MyLoadingCircle />
+        <MyLoadingCircle size={24} />
       ) : (
         <>
           {startIcon && startIcon}

@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useUpload } from '@/hooks/uploadHook'
 import Image from 'next/image'
 import MyLoadingCircle from '../my-loading-circle/MyLoadingCircle'
+import MyLoadingSkeleton from '../my-loading-skeleton/MyLoadingSkeleton'
 
 type Props = {
   id: string
@@ -12,6 +13,7 @@ type Props = {
   className?: string
   required?: boolean
   alt?: string
+  isParentLoading?: boolean
   onChange?: (fileUrl: string[]) => void
 }
 
@@ -24,9 +26,19 @@ const MyUploadImages = ({
   required,
   value,
   alt,
+  isParentLoading = false,
   onChange,
 }: Props) => {
   const { isLoading, uploadFiles } = useUpload()
+
+  if (isParentLoading) {
+    return (
+      <div className={`flex flex-col w-full ${className}`}>
+        {label && <MyLoadingSkeleton className="w-28 h-6 mb-1 rounded-md" />}
+        <MyLoadingSkeleton className="w-full h-24 rounded-md" />
+      </div>
+    )
+  }
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (typeof onChange === 'function') {
@@ -48,10 +60,12 @@ const MyUploadImages = ({
   return (
     <div className={`relative w-full h-full ${className}`}>
       {/* Label */}
-      <label htmlFor={isLoading ? '' : id} className="w-max mb-1">
-        {label}
-        {required && <span className="text-red-600 font-medium pl-1">*</span>}
-      </label>
+      {label && (
+        <label htmlFor={isLoading ? '' : id} className="w-max mb-1 inline-block">
+          {label}
+          {required && <span className="text-red-600 font-medium pl-1">*</span>}
+        </label>
+      )}
 
       {/* Main */}
       <div

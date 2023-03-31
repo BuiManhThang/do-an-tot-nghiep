@@ -7,6 +7,8 @@ type MyCheckboxProps = {
   value?: string
   checked?: boolean
   className?: string
+  size?: 'small' | 'medium'
+  style?: React.CSSProperties
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
@@ -17,6 +19,8 @@ const MyCheckbox = ({
   value,
   checked = false,
   className,
+  size = 'medium',
+  style,
   onChange,
 }: MyCheckboxProps) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,14 +30,18 @@ const MyCheckbox = ({
   }
 
   return (
-    <div className={`flex items-center group ${className}`}>
-      <div className="relative w-6 h-6">
+    <div className={`flex items-center group ${className}`} style={style}>
+      <div
+        className={`relative flex-shrink-0 ${size === 'small' ? 'w-[18px] h-[18px]' : 'w-6 h-6'}`}
+      >
         <label
           htmlFor={id}
-          className={`w-full h-full cursor-pointer flex items-center justify-center rounded-md border transition-all ring-primary-ring ${
+          className={`w-full h-full cursor-pointer flex items-center justify-center border transition-all ring-primary-ring ${
             checked
               ? 'bg-primary border-primary text-white rotate-0'
               : 'bg-white border-gray-400 text-white rotate-90'
+          } ${
+            size === 'small' ? 'rounded text-sm' : 'rounded-md'
           } group-hover:border-primary group-focus-within:border-primary group-focus-within:ring-2`}
         >
           <i className="fa-solid fa-check"></i>

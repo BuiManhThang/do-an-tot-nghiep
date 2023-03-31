@@ -20,10 +20,10 @@ export type User = {
   email: string
   password: string
   name: string
-  phoneNumber?: string | null
+  phoneNumber?: string
   avatar: string
   isAdmin: boolean
-  address?: UserAddress | null
+  address?: UserAddress
   cart: ProductInCart[]
   orders: ProductInOrder[]
   createdAt: Date
@@ -31,9 +31,9 @@ export type User = {
 }
 
 export type UserAddress = {
-  district?: string | null
-  city?: string | null
-  detail?: string | null
+  district?: string
+  city?: string
+  detail?: string
 }
 
 export type ProductInCart = {
@@ -43,6 +43,7 @@ export type ProductInCart = {
   image: string
   amount: number
   price: number
+  unit: string
   categoryId: string
   categoryName: string
 }
@@ -54,6 +55,7 @@ export type ProductInOrder = {
   image: string
   amount: number
   price: number
+  unit: string
   categoryId: string
   categoryName: string
 }

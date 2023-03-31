@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAppDispatch, useAppSelector } from '@/hooks/reduxHook'
 import Image from 'next/image'
 import { signOut } from '@/store/reducers/userSlice'
 import { useRouter } from 'next/router'
-import { Popover, Transition } from '@headlessui/react'
 import MyPopover from '../my-popover/MyPopover'
+import { getCategories } from '@/store/reducers/navbarSlice'
 
 type NavBarLink = {
   text: string
@@ -38,10 +38,53 @@ export const NAVBAR_LINKS: NavBarLink[] = [
 const TheNavBar = () => {
   const router = useRouter()
   const dispatch = useAppDispatch()
+  const productsInCart = useAppSelector((state) => state.cart.products)
+  const categories = useAppSelector((state) => state.navbar.categories)
   const userInfo = useAppSelector((state) => state.user.userInfo)
   const [isActive, setIsActive] = useState(false)
+  const [totalProductsInCart, setTotalProductsInCart] = useState(0)
+  const [navbarLinks, setNavbarLinks] = useState<NavBarLink[]>([
+    {
+      text: 'Trang chủ',
+      url: '/',
+    },
+  ])
 
   const isInAdminPage = userInfo?.isAdmin && router.pathname.includes('admin') ? true : false
+
+  useEffect(() => {
+    dispatch(getCategories())
+  }, [dispatch, isInAdminPage])
+
+  useEffect(() => {
+    const newNavbarLinks: NavBarLink[] = [
+      {
+        text: 'Trang chủ',
+        url: '/',
+      },
+    ]
+
+    for (let index = 0; index < categories.length; index++) {
+      if (index === 4) {
+        break
+      }
+      const category = categories[index]
+      newNavbarLinks.push({
+        text: category.name,
+        url: `/products?categoryId=${category.id}`,
+      })
+    }
+
+    setNavbarLinks(newNavbarLinks)
+  }, [categories])
+
+  useEffect(() => {
+    setTotalProductsInCart(
+      productsInCart.reduce((prev, cur) => {
+        return prev + cur.amount
+      }, 0)
+    )
+  }, [productsInCart])
 
   const toggleMenuLink = () => {
     setIsActive((prev: boolean) => !prev)
@@ -84,7 +127,7 @@ const TheNavBar = () => {
         </div>
         {!isInAdminPage && (
           <ul className="hidden lg:flex h-full justify-self-center">
-            {NAVBAR_LINKS.map((link, index) => {
+            {navbarLinks.map((link, index) => {
               return (
                 <li key={index} className="h-full">
                   <Link
@@ -112,9 +155,17 @@ const TheNavBar = () => {
               <div className="w-8 h-8 flex items-center justify-center cursor-pointer text-xl hover:text-primary transition-colors">
                 <i className="fa-solid fa-magnifying-glass"></i>
               </div>
-              <div className="w-8 h-8 flex items-center justify-center cursor-pointer text-xl hover:text-primary transition-colors">
+              <Link
+                href={'/cart'}
+                className="w-8 h-8 flex items-center justify-center cursor-pointer text-2xl hover:text-primary transition-colors relative"
+              >
                 <i className="fa-solid fa-bag-shopping"></i>
-              </div>
+                {totalProductsInCart > 0 && (
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 text-xs rounded-full bg-primary text-white flex items-center justify-center">
+                    {totalProductsInCart}
+                  </div>
+                )}
+              </Link>
             </>
           )}
           <div className="w-8 h-8">
@@ -147,13 +198,14 @@ const TheNavBar = () => {
                     {userInfo ? (
                       <ul className="text-base py-2">
                         <li>
-                          <div
+                          <Link
+                            href={'/info'}
                             className="cursor-pointer px-6 h-12 flex items-center text-black hover:text-primary transition-colors"
                             onClick={close}
                           >
                             <i className="fa-solid fa-info pr-3 pb-1"></i>
                             <span>Thông tin tài khoản</span>
-                          </div>
+                          </Link>
                         </li>
                         <li>
                           <div
@@ -199,7 +251,7 @@ const TheNavBar = () => {
           }`}
         >
           <ul>
-            {NAVBAR_LINKS.map((link, index) => {
+            {navbarLinks.map((link, index) => {
               return (
                 <li key={index} className="h-14 w-full border-b border-gray-300 last:border-b-0">
                   <Link

@@ -1,9 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit'
 import userReducer from './reducers/userSlice'
+import toastMsgReducer from './reducers/toastMsgSlice'
+import navbarReducer from './reducers/navbarSlice'
+import cartReducer from './reducers/cartSlice'
 
 const store = configureStore({
   reducer: {
     user: userReducer,
+    toastMsg: toastMsgReducer,
+    navbar: navbarReducer,
+    cart: cartReducer,
   },
 })
 

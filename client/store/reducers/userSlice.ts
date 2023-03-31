@@ -43,11 +43,19 @@ export const signIn = createAsyncThunk(
   }
 )
 
-export const getCurrentUser = createAsyncThunk('user/getCurrentUser', async () => {
-  const response = await baseApi.get('users/current-user')
-  const userData: User = response.data
-  return userData
-})
+export const getCurrentUser = createAsyncThunk(
+  'user/getCurrentUser',
+  async (_: any, { rejectWithValue }) => {
+    try {
+      const response = await baseApi.get('users/current-user')
+      const userData: User = response.data
+      localStorage.setItem('userId', userData.id)
+      return userData
+    } catch (error) {
+      rejectWithValue(error)
+    }
+  }
+)
 
 export const userSlice = createSlice({
   name: 'user',
@@ -57,6 +65,15 @@ export const userSlice = createSlice({
     signOut: (state) => {
       state.userInfo = undefined
       localStorage.removeItem('token')
+      localStorage.removeItem('userId')
+      localStorage.removeItem('cart')
+    },
+    setUserInfo: (state, payload) => {
+      state.userInfo = {
+        ...state.userInfo,
+        ...payload.payload,
+      }
+      localStorage.setItem('userId', payload.payload.id)
     },
   },
   extraReducers(builder) {
@@ -93,7 +110,7 @@ export const userSlice = createSlice({
   },
 })
 
-export const { signOut } = userSlice.actions
+export const { signOut, setUserInfo } = userSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 // export const selectCount = (state: RootState) => state.counter.value
