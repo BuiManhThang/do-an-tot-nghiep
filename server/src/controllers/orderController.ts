@@ -26,6 +26,17 @@ export default class OrderController extends BaseController {
       const entity: CreateOrderDto = req.body
       entity.code = await this.genereateNewCode()
       const newEntity = await this.createEntity(entity)
+
+      // Xóa giỏ hàng
+      const result = await this.prisma.user.update({
+        where: {
+          id: req.body.userId,
+        },
+        data: {
+          cart: [],
+        },
+      })
+
       return this.created(res, newEntity)
     } catch (error) {
       return this.serverError(res, error)
@@ -82,6 +93,19 @@ export default class OrderController extends BaseController {
     try {
       const id = req.params.id
       const model = await this.model.findFirst({
+        include: {
+          user: {
+            select: {
+              address: true,
+              avatar: true,
+              code: true,
+              email: true,
+              id: true,
+              name: true,
+              phoneNumber: true,
+            },
+          },
+        },
         where: {
           id,
         },

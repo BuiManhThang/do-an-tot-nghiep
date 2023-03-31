@@ -129,10 +129,13 @@ export default class CategoryController extends BaseController {
 
       const [entities, entitiesCount] = await Promise.all([
         this.model.findMany({
+          include: {
+            _count: { select: { products: true } },
+          },
           where,
           skip,
           take,
-          orderBy,
+          orderBy: sort === 'products' ? { products: { _count: direction } } : orderBy,
         }),
         this.model.aggregate({
           where,

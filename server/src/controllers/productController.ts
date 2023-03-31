@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { Request, Response } from 'express'
 import { BaseController } from './baseController'
-import { Product } from '../models/entity'
+import { Product, ValidateError } from '../models/entity'
 import {
   UpdateProductDto,
   CreateProductDto,
@@ -48,6 +48,30 @@ export default class ProductController extends BaseController {
       this.setPrevValue(entity, model as Product)
 
       const updatedEntity = await this.updateEntity(entityId, entity)
+
+      // Cập nhật sản phẩm trong giỏ hàng
+      await this.prisma.user.updateMany({
+        where: {
+          cart: { some: { id: entityId } },
+        },
+        data: {
+          cart: {
+            updateMany: {
+              where: { id: entityId },
+              data: {
+                categoryId: updatedEntity.categoryId,
+                categoryName: updatedEntity.category.name,
+                code: updatedEntity.code,
+                image: updatedEntity.image,
+                name: updatedEntity.name,
+                price: updatedEntity.price,
+                unit: updatedEntity.unit,
+              },
+            },
+          },
+        },
+      })
+
       return this.updated(res, updatedEntity)
     } catch (error) {
       return this.serverError(res, error)
@@ -65,6 +89,34 @@ export default class ProductController extends BaseController {
       if (!model) {
         return this.notFound(res)
       }
+
+      const order = await this.prisma.order.findFirst({
+        where: {
+          products: { some: { id: id } },
+          status: { in: [2, 3] },
+        },
+      })
+
+      if (order) {
+        const errors: ValidateError[] = [
+          {
+            field: 'order',
+            msg: 'Không thể xóa sản phẩm đang trong đơn hàng đã xác nhận hoặc đã thanh toán',
+            value: order,
+          },
+        ]
+        return this.clientError(res, errors)
+      }
+
+      // Xóa sản phẩm trong giỏ hàng
+      await this.prisma.user.updateMany({
+        where: {
+          cart: { some: { id: id } },
+        },
+        data: {
+          cart: { deleteMany: { where: { id: id } } },
+        },
+      })
 
       const deletedModel = await this.model.delete({
         where: {
@@ -161,6 +213,9 @@ export default class ProductController extends BaseController {
 
       const [entities, entitiesCount] = await Promise.all([
         this.model.findMany({
+          include: {
+            category: true,
+          },
           where,
           skip,
           take,
@@ -230,6 +285,9 @@ export default class ProductController extends BaseController {
 
   private updateEntity = async (entityId: string, entity: UpdateProductDto) => {
     const updatedEntity = await this.model.update({
+      include: {
+        category: true,
+      },
       where: {
         id: entityId,
       },

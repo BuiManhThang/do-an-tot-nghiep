@@ -65,6 +65,8 @@ export type Order = {
   userId: string
   user: User
   products: ProductInOrder[]
+  createdAt: Date
+  updatedAt: Date
 }
 
 export type Review = {
