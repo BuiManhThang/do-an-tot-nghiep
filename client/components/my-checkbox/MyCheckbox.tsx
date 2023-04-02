@@ -9,6 +9,7 @@ type MyCheckboxProps = {
   className?: string
   size?: 'small' | 'medium'
   style?: React.CSSProperties
+  labelStyle?: React.CSSProperties
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
@@ -21,6 +22,7 @@ const MyCheckbox = ({
   className,
   size = 'medium',
   style,
+  labelStyle,
   onChange,
 }: MyCheckboxProps) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,7 +59,7 @@ const MyCheckbox = ({
         />
       </div>
       {label && (
-        <label htmlFor={id} className="pl-2 cursor-pointer">
+        <label htmlFor={id} className="pl-2 cursor-pointer" style={labelStyle} title={label}>
           {label}
         </label>
       )}

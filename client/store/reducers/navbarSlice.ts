@@ -24,7 +24,7 @@ export const getCategories = createAsyncThunk('navbar/getCategories', async () =
 })
 
 export const navbarSlice = createSlice({
-  name: 'toastMsg',
+  name: 'navbar',
   // `createSlice` will infer the state type from the `initialState` argument
   initialState,
   reducers: {},

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Image from 'next/image'
 import Background from '../../assets/images/sign-in/pexels-moose-photos-1037995.jpg'
@@ -9,6 +9,7 @@ import TheSideBar from './TheSideBar'
 import { useAppDispatch, useAppSelector } from '@/hooks/reduxHook'
 import MyToastMsg from '../my-toast-msg/MyToastMsg'
 import { initCart } from '@/store/reducers/cartSlice'
+import { useLayout } from '@/hooks/layoutHook'
 
 type Props = {
   children?: React.ReactNode | React.ReactNode[]
@@ -17,7 +18,9 @@ type Props = {
 const TheLayout = ({ children }: Props) => {
   const router = useRouter()
   const dispatch = useAppDispatch()
+  const { isTriggerScroll, scrollToTop } = useLayout()
   const userInfo = useAppSelector((state) => state.user.userInfo)
+  const container = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     dispatch(getCurrentUser(''))
@@ -26,6 +29,14 @@ const TheLayout = ({ children }: Props) => {
         dispatch(initCart(res?.cart))
       })
   }, [dispatch])
+
+  useEffect(() => {
+    container.current?.scrollTo(0, 0)
+  }, [isTriggerScroll])
+
+  useEffect(() => {
+    container.current?.scrollTo(0, 0)
+  }, [router.pathname])
 
   if (router.pathname === '/sign-in' || router.pathname === '/register') {
     return (
@@ -51,7 +62,8 @@ const TheLayout = ({ children }: Props) => {
     <div>
       <TheNavBar />
       <div
-        className={`h-[calc(100vh_-_64px)] overflow-auto bg-page-bg ${
+        ref={container}
+        className={`h-[calc(100vh_-_64px)] overflow-auto bg-page-bg scroll-smooth ${
           isAdminPage ? 'grid grid-cols-[200px_auto]' : ''
         }`}
       >

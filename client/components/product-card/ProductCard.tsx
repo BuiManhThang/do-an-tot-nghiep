@@ -60,7 +60,7 @@ const ProductCard = ({ product }: Props) => {
 
       <div className="pb-3 px-3">
         <div
-          className="font-bold text-lg overflow-hidden leading-5 mb-2"
+          className="font-bold text-lg overflow-hidden leading-5 mb-2 h-10"
           style={{
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',

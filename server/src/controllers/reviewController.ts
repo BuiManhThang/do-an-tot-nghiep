@@ -153,6 +153,17 @@ export default class ReviewController extends BaseController {
 
       const [entities, entitiesCount] = await Promise.all([
         this.model.findMany({
+          include: {
+            user: {
+              select: {
+                id: true,
+                avatar: true,
+                code: true,
+                email: true,
+                name: true,
+              },
+            },
+          },
           where,
           skip,
           take,

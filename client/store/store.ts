@@ -3,6 +3,7 @@ import userReducer from './reducers/userSlice'
 import toastMsgReducer from './reducers/toastMsgSlice'
 import navbarReducer from './reducers/navbarSlice'
 import cartReducer from './reducers/cartSlice'
+import layoutReducer from './reducers/layoutSlice'
 
 const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ const store = configureStore({
     toastMsg: toastMsgReducer,
     navbar: navbarReducer,
     cart: cartReducer,
+    layout: layoutReducer,
   },
 })
 

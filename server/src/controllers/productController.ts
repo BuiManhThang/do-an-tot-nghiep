@@ -196,7 +196,9 @@ export default class ProductController extends BaseController {
         where.OR = [{ code: { contains: searchText } }, { name: { contains: searchText } }]
       }
       if (categoryId !== undefined) {
-        where.categoryId = categoryId
+        where.categoryId = {
+          in: categoryId.split(';'),
+        }
       }
       if (isActive !== undefined) {
         where.isActive = JSON.parse(isActive)

@@ -28,7 +28,7 @@ export type PagingProductParam = PagingParam & {
 }
 
 export type WhereProductParam = WhereParam & {
-  categoryId?: string
+  categoryId?: any
   isActive?: boolean
   price?: any
 }

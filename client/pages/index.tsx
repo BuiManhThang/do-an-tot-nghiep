@@ -152,8 +152,8 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main ref={containerRef} className="">
-        <div className="w-full h-[274px] lg:h-[620px]">
+      <main ref={containerRef} className="pt-9">
+        <div className="w-full px-6 lg:w-[1200px] lg:px-0 lg:mx-auto h-[274px] lg:h-[620px] rounded-md overflow-hidden shadow-custom">
           <MySlider images={IMAGES} height={sliderHeight} />
         </div>
 
@@ -162,7 +162,7 @@ export default function Home() {
             {IMAGES_2.map((image, index) => (
               <div
                 key={index}
-                className="rounded-2xl overflow-hidden w-full h-[380px] lg:h-[166px] relative"
+                className="rounded-2xl overflow-hidden w-full h-[380px] lg:h-[166px] relative shadow-custom"
               >
                 <Image
                   src={image}

@@ -18,20 +18,8 @@ export const NAVBAR_LINKS: NavBarLink[] = [
     url: '/',
   },
   {
-    text: 'Giới thiệu',
-    url: '/1',
-  },
-  {
-    text: 'Hoa quả',
-    url: '/2',
-  },
-  {
-    text: 'Đồ uống',
-    url: '/3',
-  },
-  {
-    text: 'Thức ăn nhanh',
-    url: '/4',
+    text: 'Sản phẩm',
+    url: '/products',
   },
 ]
 
@@ -48,6 +36,10 @@ const TheNavBar = () => {
       text: 'Trang chủ',
       url: '/',
     },
+    {
+      text: 'Sản phẩm',
+      url: '/products',
+    },
   ])
 
   const isInAdminPage = userInfo?.isAdmin && router.pathname.includes('admin') ? true : false
@@ -61,6 +53,10 @@ const TheNavBar = () => {
       {
         text: 'Trang chủ',
         url: '/',
+      },
+      {
+        text: 'Sản phẩm',
+        url: '/products',
       },
     ]
 
@@ -122,9 +118,12 @@ const TheNavBar = () => {
             )}
           </div>
         )}
-        <div className="justify-self-center lg:justify-self-start font-bold text-2xl text-primary cursor-pointer">
+        <Link
+          href={'/'}
+          className="justify-self-center lg:justify-self-start font-bold text-2xl text-primary cursor-pointer"
+        >
           Logo
-        </div>
+        </Link>
         {!isInAdminPage && (
           <ul className="hidden lg:flex h-full justify-self-center">
             {navbarLinks.map((link, index) => {
@@ -207,6 +206,27 @@ const TheNavBar = () => {
                             <span>Thông tin tài khoản</span>
                           </Link>
                         </li>
+                        {userInfo.isAdmin && (
+                          <li>
+                            <Link
+                              href={isInAdminPage ? '/' : '/admin'}
+                              className="cursor-pointer px-6 h-12 flex items-center text-black hover:text-primary transition-colors"
+                              onClick={close}
+                            >
+                              {isInAdminPage ? (
+                                <>
+                                  <i className="fa-solid fa-house pr-3 pb-1"></i>
+                                  <span>Trang chủ</span>
+                                </>
+                              ) : (
+                                <>
+                                  <i className="fa-solid fa-house pr-3 pb-1"></i>
+                                  <span>Quản lý</span>
+                                </>
+                              )}
+                            </Link>
+                          </li>
+                        )}
                         <li>
                           <div
                             className="cursor-pointer px-6 h-12 flex items-center text-black hover:text-primary transition-colors"

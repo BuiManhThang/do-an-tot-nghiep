@@ -36,7 +36,7 @@ const MySlider = ({ height = 500, width, images }: Props) => {
                 src={image}
                 alt={`${index}`}
                 fill={true}
-                className="object-cover"
+                className="object-cover object-center"
                 sizes={sizes}
               />
             </div>

@@ -28,6 +28,7 @@ type Props = {
   total: number
   pageSize: number
   pageIndex: number
+  isShowPageSize?: boolean
   onChangePageSize?: (pageSize: number) => void
   onChangePageIndex?: (pageSize: number) => void
 }
@@ -36,6 +37,7 @@ const MyPaging = ({
   total,
   pageSize = 20,
   pageIndex = 1,
+  isShowPageSize = true,
   onChangePageSize,
   onChangePageIndex,
 }: Props) => {
@@ -108,18 +110,20 @@ const MyPaging = ({
         Tổng: <span className="font-medium">{total}</span> bản ghi
       </div>
       <div className="flex items-center gap-x-5">
-        <div className="w-80">
-          <MySelect
-            id="page-size"
-            name="page-size"
-            options={PAGE_SIZE_OPTIONS}
-            label="Số lượng bản ghi 1 trang"
-            isHorizontal={true}
-            isOptionsTop={true}
-            value={pageSize}
-            onChange={handleChangePageSize}
-          />
-        </div>
+        {isShowPageSize && (
+          <div className="w-80">
+            <MySelect
+              id="page-size"
+              name="page-size"
+              options={PAGE_SIZE_OPTIONS}
+              label="Số lượng bản ghi 1 trang"
+              isHorizontal={true}
+              isOptionsTop={true}
+              value={pageSize}
+              onChange={handleChangePageSize}
+            />
+          </div>
+        )}
         <div className="flex items-center">
           <div
             className={`w-10 h-10 text-sm rounded-md ${
