@@ -338,6 +338,9 @@ export default class UserController extends BaseController {
 
       const [entities, entitiesCount] = await Promise.all([
         this.model.findMany({
+          include: {
+            _count: { select: { orders: true } },
+          },
           where,
           skip,
           take,

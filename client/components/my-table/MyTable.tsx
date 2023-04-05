@@ -79,16 +79,6 @@ const MyTable = ({
   }
 
   let leftFirstColumn: string | undefined = undefined
-  if (stickyFirstColumn) {
-    let leftFirstColumnNumber = 0
-    if (checkable) {
-      leftFirstColumnNumber += 40
-    }
-    if (checkable) {
-      leftFirstColumnNumber += 56
-    }
-    leftFirstColumn = `${leftFirstColumnNumber}px`
-  }
 
   useEffect(() => {
     if (selectedRows.length === data.length && data.length > 0) {
@@ -157,7 +147,7 @@ const MyTable = ({
               {/* Checkbox */}
               {checkable && (
                 <th
-                  className={`sticky top-0 z-[2] h-10 w-10 min-w-[40px] border-b border-gray-200 bg-white ${
+                  className={`sticky top-0 z-[3] h-10 w-10 min-w-[40px] border-b border-gray-200 bg-white ${
                     stickyFirstColumn ? 'left-0' : ''
                   }`}
                 >
@@ -175,8 +165,12 @@ const MyTable = ({
               {/* RowIndex */}
               {haveRowIndex && (
                 <th
-                  className={`sticky top-0 z-[2] h-10 w-14 min-w-[56px] px-3 border-b border-gray-200 bg-white ${
-                    stickyFirstColumn ? 'left-10' : ''
+                  className={`sticky top-0 z-[3] h-10 w-14 min-w-[56px] px-3 border-b border-gray-200 bg-white ${
+                    stickyFirstColumn
+                      ? checkable
+                        ? 'sticky left-10 z-[1]'
+                        : 'sticky left-0 z-[1]'
+                      : ''
                   }`}
                 >
                   <div className="w-full text-center">STT</div>
@@ -221,7 +215,11 @@ const MyTable = ({
                       left: leftFirstColumn,
                     }}
                     className={`sticky top-0 px-3 h-10 font-medium border-b border-gray-200 bg-white ${
-                      stickyFirstColumn && columnIndex === 0 ? 'sticky z-[3]' : 'z-[2]'
+                      stickyFirstColumn && columnIndex === 0
+                        ? checkable
+                          ? 'sticky left-24 z-[3]'
+                          : 'sticky left-14 z-[3]'
+                        : 'z-[2]'
                     }`}
                   >
                     <div className={`${align}`}>{column.title}</div>

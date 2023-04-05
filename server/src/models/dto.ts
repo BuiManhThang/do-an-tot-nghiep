@@ -35,10 +35,12 @@ export type WhereProductParam = WhereParam & {
 
 export type PagingOrderParam = PagingParam & {
   userId?: string
+  status?: OrderStatus
 }
 
 export type WhereOrderParam = WhereParam & {
   userId?: string
+  status?: number
 }
 
 export type PagingReviewParam = PagingParam & {

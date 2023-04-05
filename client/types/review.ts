@@ -1,3 +1,4 @@
+import { Product } from './product'
 import { User } from './user'
 
 export type Review = {
@@ -5,6 +6,7 @@ export type Review = {
   productId: string
   userId: string
   user: User
+  product: Product
   score: number
   comment: string
   createdAt: Date

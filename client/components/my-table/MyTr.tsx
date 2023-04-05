@@ -1,6 +1,7 @@
 import React from 'react'
 import MyCheckbox from '../my-checkbox/MyCheckbox'
 import { Column, TableAlign, TableDataType } from './MyTable'
+import { convertDate } from '@/common/format'
 
 type Props = {
   columns: Column[]
@@ -109,7 +110,7 @@ const MyTr = ({
       {haveRowIndex && (
         <td
           className={`w-14 min-w-[56px] bg-white px-3 border-b border-gray-200 transition-colors group-hover:bg-sky-100 ${
-            stickyFirstColumn ? 'sticky left-10 z-[1]' : ''
+            stickyFirstColumn ? (checkable ? 'sticky left-10 z-[1]' : 'sticky left-0 z-[1]') : ''
           }`}
           style={{
             height: height,
@@ -146,7 +147,11 @@ const MyTr = ({
                 left: leftFirstColumn,
               }}
               className={`px-3 border-b bg-white border-gray-200 transition-colors group-hover:bg-sky-100 ${
-                stickyFirstColumn && columnIndex === 0 ? 'sticky z-[1]' : ''
+                stickyFirstColumn && columnIndex === 0
+                  ? checkable
+                    ? 'sticky left-24 z-[1]'
+                    : 'sticky left-14 z-[1]'
+                  : ''
               }`}
             >
               {column.template(data)}
@@ -161,7 +166,7 @@ const MyTr = ({
         let align = 'text-left'
         switch (column.dataType) {
           case TableDataType.Date:
-            rowValue = new Date(rowValue).toDateString()
+            rowValue = convertDate(rowValue)
             break
         }
 
@@ -188,7 +193,11 @@ const MyTr = ({
               left: leftFirstColumn,
             }}
             className={`px-3 border-b bg-white border-gray-200 transition-colors group-hover:bg-sky-100 ${
-              stickyFirstColumn && columnIndex === 0 ? 'sticky z-[1]' : ''
+              stickyFirstColumn && columnIndex === 0
+                ? checkable
+                  ? 'sticky left-24 z-[1]'
+                  : 'sticky left-14 z-[1]'
+                : ''
             }`}
           >
             <div className={`${align}`}>{rowValue}</div>

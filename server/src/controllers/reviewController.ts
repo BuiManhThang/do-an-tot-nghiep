@@ -161,6 +161,14 @@ export default class ReviewController extends BaseController {
                 code: true,
                 email: true,
                 name: true,
+                phoneNumber: true,
+              },
+            },
+            product: {
+              select: {
+                image: true,
+                code: true,
+                name: true,
               },
             },
           },

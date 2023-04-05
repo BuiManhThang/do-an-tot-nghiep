@@ -526,7 +526,7 @@ const AdminProductsPage = () => {
         </div>
       </div>
 
-      <div className="h-[calc(100%_-_160px)]">
+      <div className="h-[calc(100%_-_160px)] w-[calc(100vw_-_248px)]">
         <MyTable
           containerRef={tabelContainerRef}
           columns={COLUMNS}

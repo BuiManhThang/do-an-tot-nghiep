@@ -9,6 +9,7 @@ import {
   PagingOrderParam,
   WhereOrderParam,
 } from '../models/dto'
+import { OrderStatus } from '../models/enum'
 
 export default class OrderController extends BaseController {
   private readonly prisma: PrismaClient
@@ -130,7 +131,7 @@ export default class OrderController extends BaseController {
 
   getPaging = async (req: Request, res: Response) => {
     try {
-      const { pageIndex, pageSize, sort, direction, searchText, userId } =
+      const { pageIndex, pageSize, sort, direction, searchText, userId, status } =
         req.query as PagingOrderParam
       let skip = undefined
       let take = undefined
@@ -170,6 +171,9 @@ export default class OrderController extends BaseController {
       if (userId !== undefined) {
         where.userId = userId
       }
+      if (status !== undefined) {
+        where.status = parseInt(status.toString())
+      }
 
       const [entities, entitiesCount] = await Promise.all([
         this.model.findMany({
@@ -179,7 +183,7 @@ export default class OrderController extends BaseController {
           where,
           skip,
           take,
-          orderBy,
+          orderBy: sort === 'products' ? { products: { _count: direction } } : orderBy,
         }),
         this.model.aggregate({
           where,

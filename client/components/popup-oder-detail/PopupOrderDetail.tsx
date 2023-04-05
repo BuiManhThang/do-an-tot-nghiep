@@ -127,7 +127,7 @@ const PopupOrderDetail = ({
     <MyPopup
       isActive={isActive}
       title={
-        <div className="flex items-end">
+        <div className="flex items-center">
           <div>Thông tin đơn hàng</div>
           <div
             className={`ml-4 flex items-center justify-center font-medium border-2 rounded-md h-6 text-base px-4 ${

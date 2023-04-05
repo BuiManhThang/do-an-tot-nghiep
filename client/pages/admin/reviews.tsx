@@ -1,30 +1,27 @@
-import React, { useEffect, useRef, useState } from 'react'
-import Head from 'next/head'
-import MyTable, { Column, TableDataType, TableAlign } from '@/components/my-table/MyTable'
-import MyPaging from '@/components/my-paging/MyPaging'
-import MyButton from '@/components/my-button/MyButton'
-import MySelect, { MySelectOption } from '@/components/my-select/MySelect'
-import MyTextField from '@/components/my-text-field/MyTextField'
-import { Category } from '@/types/category'
 import baseApi from '@/apis/baseApi'
-import { PagingResult } from '@/types/paging'
+import MyPaging from '@/components/my-paging/MyPaging'
 import MyPopupConfirm from '@/components/my-popup/MyPopupConfirm'
-import { useToastMsg } from '@/hooks/toastMsgHook'
+import MySelect, { MySelectOption } from '@/components/my-select/MySelect'
+import MyTable, { Column, TableAlign, TableDataType } from '@/components/my-table/MyTable'
+import MyTextField from '@/components/my-text-field/MyTextField'
 import { ToastMsgType } from '@/enum/toastMsg'
-import PopupAddCategory from '@/components/popup/PopupAddCategory'
+import { useToastMsg } from '@/hooks/toastMsgHook'
+import { PagingResult } from '@/types/paging'
+import { Product } from '@/types/product'
+import { Review } from '@/types/review'
+import { User } from '@/types/user'
+import Head from 'next/head'
+import Image from 'next/image'
+import React, { useEffect, useRef, useState } from 'react'
 
 const ORDER_BY_OPTIONS: MySelectOption[] = [
   {
-    text: 'Mã',
-    value: 'code',
+    text: 'Ngày tạo',
+    value: 'createdAt',
   },
   {
-    text: 'Tên',
-    value: 'name',
-  },
-  {
-    text: 'Số lượng sản phẩm',
-    value: 'products',
+    text: 'Điểm đánh giá',
+    value: 'score',
   },
 ]
 
@@ -42,25 +39,111 @@ const ORDER_DIRECTION: MySelectOption[] = [
 const COLUMNS: Column[] = [
   {
     dataType: TableDataType.Text,
-    fieldName: 'code',
-    title: 'Mã danh mục',
-    width: 125,
+    fieldName: 'user',
+    childFieldName: 'code',
+    title: 'Mã người dùng',
+    width: 140,
+    minWidth: 140,
+  },
+  {
+    dataType: TableDataType.Custom,
+    align: TableAlign.Center,
+    fieldName: 'image',
+    title: 'Ảnh đại diện',
+    width: 120,
+    minWidth: 120,
+    template: (rowData) => {
+      const review: Review = rowData
+      const user: User = review.user
+      return (
+        <div className="flex items-center justify-center py-1">
+          <Image
+            src={user.avatar}
+            alt={user.name}
+            width={78}
+            height={78}
+            className="object-contain object-center w-20 h-20 rounded-md overflow-hidden border border-gray-200"
+          />
+        </div>
+      )
+    },
+  },
+  {
+    dataType: TableDataType.Text,
+    fieldName: 'user',
+    childFieldName: 'name',
+    title: 'Họ tên người dùng',
+    minWidth: 200,
+    width: 200,
+  },
+  {
+    dataType: TableDataType.Text,
+    fieldName: 'user',
+    childFieldName: 'email',
+    title: 'Email người dùng',
+    width: 200,
+    minWidth: 200,
+  },
+  {
+    dataType: TableDataType.Text,
+    fieldName: 'user',
+    childFieldName: 'phoneNumber',
+    title: 'SĐT người dùng',
+    width: 140,
+    minWidth: 140,
+  },
+  {
+    dataType: TableDataType.Custom,
+    align: TableAlign.Center,
+    fieldName: 'productImage',
+    title: 'Hình ảnh sản phẩm',
+    width: 170,
+    minWidth: 170,
+    template: (rowData) => {
+      const review: Review = rowData
+      const product: Product = review.product
+      return (
+        <div className="flex items-center justify-center py-1">
+          <Image
+            src={product.image}
+            alt={product.name}
+            width={78}
+            height={78}
+            className="object-contain object-center w-20 h-20 rounded-md overflow-hidden border border-gray-200"
+          />
+        </div>
+      )
+    },
+  },
+  {
+    dataType: TableDataType.Text,
+    fieldName: 'product',
+    childFieldName: 'code',
+    title: 'Mã sản phẩm',
     minWidth: 125,
   },
   {
     dataType: TableDataType.Text,
-    fieldName: 'name',
-    title: 'Tên danh mục',
-    minWidth: 200,
+    fieldName: 'product',
+    childFieldName: 'name',
+    title: 'Tên sản phẩm',
+    minWidth: 250,
   },
   {
     dataType: TableDataType.Text,
     align: TableAlign.Right,
-    fieldName: '_count',
-    childFieldName: 'products',
-    title: 'Số lượng sản phẩm',
-    minWidth: 200,
-    width: 200,
+    fieldName: 'score',
+    title: 'Số điểm',
+    width: 130,
+    minWidth: 130,
+  },
+  {
+    dataType: TableDataType.Date,
+    align: TableAlign.Center,
+    fieldName: 'createdAt',
+    title: 'Ngày tạo',
+    width: 150,
+    minWidth: 150,
   },
 ]
 
@@ -73,7 +156,7 @@ type SearchParams = {
 }
 
 const getPagingFunc = async (searchParams: SearchParams): Promise<PagingResult> => {
-  const res = await baseApi.get('categories/paging', {
+  const res = await baseApi.get('reviews/paging', {
     searchText: searchParams.searchText ? searchParams.searchText : undefined,
     pageIndex: searchParams.pageIndex,
     pageSize: searchParams.pageSize,
@@ -84,11 +167,11 @@ const getPagingFunc = async (searchParams: SearchParams): Promise<PagingResult> 
 }
 
 const deleteFunc = async (id: string): Promise<boolean> => {
-  const res = await baseApi.delete(`categories/${id}`)
+  const res = await baseApi.delete(`reviews/${id}`)
   return res.status === 204 ? true : false
 }
 
-const AdminCategoriesPage = () => {
+const AdminReviewsPage = () => {
   const timeoutFunc = useRef<NodeJS.Timeout | undefined>(undefined)
   const tabelContainerRef = useRef<HTMLDivElement>(null)
   const { openToast } = useToastMsg()
@@ -96,13 +179,13 @@ const AdminCategoriesPage = () => {
   const [isLoadingDelete, setIsLoadingDelete] = useState<boolean>(false)
   const [editEntityId, setEditEntityId] = useState<string>('')
   const [isActivePopupAdd, setIsActivePopupAdd] = useState(false)
-  const [deleteEntities, setDeleteEntities] = useState<Category[]>([])
+  const [deleteEntities, setDeleteEntities] = useState<Review[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [entities, setEntities] = useState<Category[]>([])
+  const [entities, setEntities] = useState<Review[]>([])
   const [totalRecords, setTotalRecords] = useState<number>(0)
   const [searchParams, setSearchParams] = useState<SearchParams>({
     searchText: '',
-    sort: 'code',
+    sort: 'createdAt',
     direction: 'asc',
     pageIndex: 1,
     pageSize: 20,
@@ -114,7 +197,7 @@ const AdminCategoriesPage = () => {
       try {
         const pagingResult = await getPagingFunc({
           searchText: '',
-          sort: 'code',
+          sort: 'createdAt',
           direction: 'asc',
           pageIndex: 1,
           pageSize: 20,
@@ -219,7 +302,7 @@ const AdminCategoriesPage = () => {
     getPaging(searchParams)
   }
 
-  const handleClickEdit = (e: Category) => {
+  const handleClickEdit = (e: Review) => {
     openPopupAdd(e.id)
   }
 
@@ -231,7 +314,7 @@ const AdminCategoriesPage = () => {
     setIsActiveConfirm(false)
   }
 
-  const handleClickDelete = (deleteEntity: Category) => {
+  const handleClickDelete = (deleteEntity: Review) => {
     setDeleteEntities([deleteEntity])
     openPopupConfirm()
   }
@@ -246,9 +329,9 @@ const AdminCategoriesPage = () => {
       await Promise.all(deleteFuncs)
       let successMsg = ''
       if (deleteEntities.length === 1) {
-        successMsg = `Xóa thành công danh mục có mã ${deleteEntities[0].code}`
+        successMsg = `Xóa thành công đánh giá của người dùng có mã ${deleteEntities[0].user.code}`
       } else {
-        successMsg = `Xóa thành công ${deleteEntities.length} danh mục`
+        successMsg = `Xóa thành công ${deleteEntities.length} đánh giá`
       }
       openToast({
         msg: successMsg,
@@ -270,16 +353,16 @@ const AdminCategoriesPage = () => {
   return (
     <div className="h-full">
       <Head>
-        <title>Quản lý danh mục</title>
+        <title>Quản lý đánh giá</title>
       </Head>
-      <h2 className="font-bold text-xl mb-6 leading-none">Quản lý danh mục</h2>
+      <h2 className="font-bold text-xl mb-6 leading-none">Quản lý đánh giá</h2>
 
       <div className="flex items-start justify-between mb-6">
         <div className="w-80">
           <MyTextField
             id="searchText"
             name="searchText"
-            placeholder="Nhập tên, mã danh mục"
+            placeholder="Nhập tên, mã khách hàng, sản phẩm"
             startIcon={<i className="fa-solid fa-magnifying-glass text-gray-500"></i>}
             value={searchParams.searchText}
             onChange={handleChangeSearchText}
@@ -306,13 +389,6 @@ const AdminCategoriesPage = () => {
               value={searchParams.direction}
               options={ORDER_DIRECTION}
               onChange={handleChangeSortDirection}
-            />
-          </div>
-          <div>
-            <MyButton
-              text="Thêm mới"
-              startIcon={<i className="fa-solid fa-plus"></i>}
-              onClick={() => openPopupAdd()}
             />
           </div>
         </div>
@@ -349,12 +425,12 @@ const AdminCategoriesPage = () => {
         />
       </div>
 
-      <PopupAddCategory
+      {/* <PopupAddCategory
         isActive={isActivePopupAdd}
         categoryId={editEntityId}
         onClose={closePopupAdd}
         onSave={handleSaveEntity}
-      />
+      /> */}
 
       <MyPopupConfirm
         isActive={isActiveConfigm}
@@ -364,12 +440,12 @@ const AdminCategoriesPage = () => {
       >
         {deleteEntities.length > 1 ? (
           <div>
-            <span>{`Xác nhận xóa ${deleteEntities.length} danh mục`}</span>
+            <span>{`Xác nhận xóa ${deleteEntities.length} đánh giá`}</span>
           </div>
         ) : deleteEntities.length > 0 ? (
           <div>
-            <span>{`Xác nhận xóa danh mục với mã `}</span>
-            <span className="font-medium">{deleteEntities[0].code}</span>
+            <span>{`Xác nhận xóa đánh giá của người dùng với mã `}</span>
+            <span className="font-medium">{deleteEntities[0].user.code}</span>
           </div>
         ) : (
           <div></div>
@@ -379,4 +455,4 @@ const AdminCategoriesPage = () => {
   )
 }
 
-export default AdminCategoriesPage
+export default AdminReviewsPage

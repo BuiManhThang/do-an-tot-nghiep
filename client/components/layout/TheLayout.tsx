@@ -63,12 +63,12 @@ const TheLayout = ({ children }: Props) => {
       <TheNavBar />
       <div
         ref={container}
-        className={`h-[calc(100vh_-_64px)] overflow-auto bg-page-bg scroll-smooth ${
+        className={`h-[calc(100vh_-_64px)] w-full overflow-auto bg-page-bg scroll-smooth ${
           isAdminPage ? 'grid grid-cols-[200px_auto]' : ''
         }`}
       >
         <div
-          className={`w-full ${isAdminPage ? 'h-[calc(100vh_-_64px)]' : ''} ${
+          className={`${isAdminPage ? 'h-[calc(100vh_-_64px)] w-full' : 'w-full'} ${
             isAdminPage ? 'col-start-2 row-start-1 px-6 pt-6' : ''
           }`}
         >

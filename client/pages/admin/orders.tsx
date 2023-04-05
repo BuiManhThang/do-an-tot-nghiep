@@ -1,17 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react'
-import Head from 'next/head'
-import MyTable, { Column, TableDataType, TableAlign } from '@/components/my-table/MyTable'
-import MyPaging from '@/components/my-paging/MyPaging'
-import MyButton from '@/components/my-button/MyButton'
-import MySelect, { MySelectOption } from '@/components/my-select/MySelect'
-import MyTextField from '@/components/my-text-field/MyTextField'
-import { Category } from '@/types/category'
 import baseApi from '@/apis/baseApi'
+import MyPaging from '@/components/my-paging/MyPaging'
+import MySelect, { MySelectOption } from '@/components/my-select/MySelect'
+import MyTable, { Column, TableAlign, TableDataType } from '@/components/my-table/MyTable'
+import MyTextField from '@/components/my-text-field/MyTextField'
+import PopupOrderDetail from '@/components/popup-oder-detail/PopupOrderDetail'
+import { OrderStatus } from '@/enum/orderStatus'
+import { Order } from '@/types/order'
 import { PagingResult } from '@/types/paging'
-import MyPopupConfirm from '@/components/my-popup/MyPopupConfirm'
-import { useToastMsg } from '@/hooks/toastMsgHook'
-import { ToastMsgType } from '@/enum/toastMsg'
-import PopupAddCategory from '@/components/popup/PopupAddCategory'
+import Head from 'next/head'
+import React, { useEffect, useRef, useState } from 'react'
 
 const ORDER_BY_OPTIONS: MySelectOption[] = [
   {
@@ -19,12 +16,16 @@ const ORDER_BY_OPTIONS: MySelectOption[] = [
     value: 'code',
   },
   {
-    text: 'Tên',
-    value: 'name',
-  },
-  {
     text: 'Số lượng sản phẩm',
     value: 'products',
+  },
+  {
+    text: 'Tổng tiền thanh toán',
+    value: 'totalMoney',
+  },
+  {
+    text: 'Trạng thái',
+    value: 'status',
   },
 ]
 
@@ -39,33 +40,139 @@ const ORDER_DIRECTION: MySelectOption[] = [
   },
 ]
 
+const STATUS_OPTIONS: MySelectOption[] = [
+  {
+    text: 'Tất cả',
+    value: null,
+  },
+  {
+    text: 'Chờ xác nhận',
+    value: OrderStatus.Pending,
+  },
+  {
+    text: 'Đã xác nhận',
+    value: OrderStatus.Confirmed,
+  },
+  {
+    text: 'Đã giao dịch',
+    value: OrderStatus.Success,
+  },
+]
+
 const COLUMNS: Column[] = [
   {
     dataType: TableDataType.Text,
     fieldName: 'code',
-    title: 'Mã danh mục',
+    title: 'Mã đơn hàng',
     width: 125,
     minWidth: 125,
   },
   {
     dataType: TableDataType.Text,
-    fieldName: 'name',
-    title: 'Tên danh mục',
+    fieldName: 'user',
+    childFieldName: 'code',
+    title: 'Mã người đặt',
+    width: 125,
+    minWidth: 125,
+  },
+  {
+    dataType: TableDataType.Text,
+    fieldName: 'user',
+    childFieldName: 'name',
+    title: 'Họ tên người đặt',
     minWidth: 200,
   },
   {
     dataType: TableDataType.Text,
-    align: TableAlign.Right,
-    fieldName: '_count',
-    childFieldName: 'products',
-    title: 'Số lượng sản phẩm',
+    fieldName: 'user',
+    childFieldName: 'phoneNumber',
+    title: 'SĐT người đặt',
+    minWidth: 150,
+    width: 150,
+  },
+  {
+    dataType: TableDataType.Text,
+    fieldName: 'user',
+    childFieldName: 'email',
+    title: 'Email người đặt',
     minWidth: 200,
     width: 200,
+  },
+  {
+    dataType: TableDataType.Custom,
+    align: TableAlign.Right,
+    fieldName: 'products',
+    title: 'Số lượng sản phẩm',
+    width: 170,
+    minWidth: 170,
+    template: (rowData: any) => {
+      return (
+        <>
+          <div className="text-right">{rowData.products.length}</div>
+        </>
+      )
+    },
+  },
+  {
+    dataType: TableDataType.Money,
+    align: TableAlign.Right,
+    fieldName: 'totalMoney',
+    title: 'Tổng tiền thanh toán',
+    minWidth: 200,
+    width: 200,
+  },
+  {
+    dataType: TableDataType.Custom,
+    align: TableAlign.Center,
+    fieldName: 'status',
+    title: 'Trạng thái',
+    minWidth: 170,
+    width: 170,
+    template: (rowData: any) => {
+      const order: Order = rowData
+      return (
+        <div className="flex items-center justify-center">
+          <div
+            className={`flex items-center justify-center font-medium border-2 rounded-md px-4 cursor-default ${
+              order.status === OrderStatus.Pending
+                ? 'border-orange-500 text-orange-500'
+                : order.status === OrderStatus.Confirmed
+                ? 'border-primary text-primary'
+                : 'border-green-500 text-green-500'
+            }`}
+          >
+            {order.status === OrderStatus.Pending ? (
+              <div>Chờ xác nhận</div>
+            ) : order.status === OrderStatus.Confirmed ? (
+              <div>Đã xác nhận</div>
+            ) : (
+              <div>Đã giao dịch</div>
+            )}
+          </div>
+        </div>
+      )
+    },
+  },
+  {
+    dataType: TableDataType.Date,
+    align: TableAlign.Center,
+    fieldName: 'createdAt',
+    title: 'Ngày lập',
+    minWidth: 140,
+    width: 140,
+    template: (rowData: any) => {
+      return (
+        <>
+          <div>{rowData.createdAt}</div>
+        </>
+      )
+    },
   },
 ]
 
 type SearchParams = {
   searchText: string
+  status: OrderStatus | null
   sort: string
   direction: string
   pageIndex: number
@@ -73,8 +180,9 @@ type SearchParams = {
 }
 
 const getPagingFunc = async (searchParams: SearchParams): Promise<PagingResult> => {
-  const res = await baseApi.get('categories/paging', {
+  const res = await baseApi.get('orders/paging', {
     searchText: searchParams.searchText ? searchParams.searchText : undefined,
+    status: searchParams.status ? searchParams.status : undefined,
     pageIndex: searchParams.pageIndex,
     pageSize: searchParams.pageSize,
     sort: searchParams.sort,
@@ -83,25 +191,17 @@ const getPagingFunc = async (searchParams: SearchParams): Promise<PagingResult> 
   return res.data as PagingResult
 }
 
-const deleteFunc = async (id: string): Promise<boolean> => {
-  const res = await baseApi.delete(`categories/${id}`)
-  return res.status === 204 ? true : false
-}
-
-const AdminCategoriesPage = () => {
+const AdminOrdersPage = () => {
   const timeoutFunc = useRef<NodeJS.Timeout | undefined>(undefined)
   const tabelContainerRef = useRef<HTMLDivElement>(null)
-  const { openToast } = useToastMsg()
-  const [isActiveConfigm, setIsActiveConfirm] = useState<boolean>(false)
-  const [isLoadingDelete, setIsLoadingDelete] = useState<boolean>(false)
   const [editEntityId, setEditEntityId] = useState<string>('')
-  const [isActivePopupAdd, setIsActivePopupAdd] = useState(false)
-  const [deleteEntities, setDeleteEntities] = useState<Category[]>([])
+  const [isActivePopupDetail, setIsActivePopupDetail] = useState(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [entities, setEntities] = useState<Category[]>([])
+  const [entities, setEntities] = useState<Order[]>([])
   const [totalRecords, setTotalRecords] = useState<number>(0)
   const [searchParams, setSearchParams] = useState<SearchParams>({
     searchText: '',
+    status: null,
     sort: 'code',
     direction: 'asc',
     pageIndex: 1,
@@ -114,6 +214,7 @@ const AdminCategoriesPage = () => {
       try {
         const pagingResult = await getPagingFunc({
           searchText: '',
+          status: null,
           sort: 'code',
           direction: 'asc',
           pageIndex: 1,
@@ -158,6 +259,16 @@ const AdminCategoriesPage = () => {
     timeoutFunc.current = setTimeout(() => {
       getPaging(newSearchParams)
     }, 500)
+  }
+
+  const handleChangeStatus = (status: string | number | boolean | null | undefined) => {
+    const newSearchParams: SearchParams = {
+      ...searchParams,
+      status: status ? (status as OrderStatus) : null,
+      pageIndex: 1,
+    }
+    setSearchParams(newSearchParams)
+    getPaging(newSearchParams)
   }
 
   const handleChangeSort = (sort: string | number | boolean | null | undefined) => {
@@ -207,85 +318,52 @@ const AdminCategoriesPage = () => {
     } else {
       setEditEntityId('')
     }
-    setIsActivePopupAdd(true)
+    setIsActivePopupDetail(true)
   }
 
-  const closePopupAdd = () => {
-    setIsActivePopupAdd(false)
+  const closePopupDetail = () => {
+    setIsActivePopupDetail(false)
   }
 
   const handleSaveEntity = () => {
-    closePopupAdd()
+    closePopupDetail()
     getPaging(searchParams)
   }
 
-  const handleClickEdit = (e: Category) => {
+  const handleClickEdit = (e: Order) => {
     openPopupAdd(e.id)
-  }
-
-  const openPopupConfirm = () => {
-    setIsActiveConfirm(true)
-  }
-
-  const closePopupConfirm = () => {
-    setIsActiveConfirm(false)
-  }
-
-  const handleClickDelete = (deleteEntity: Category) => {
-    setDeleteEntities([deleteEntity])
-    openPopupConfirm()
-  }
-
-  const handleDelete = async () => {
-    setIsLoadingDelete(true)
-    try {
-      const deleteFuncs = deleteEntities.map((deleteEntity) => {
-        return deleteFunc(deleteEntity.id)
-      })
-
-      await Promise.all(deleteFuncs)
-      let successMsg = ''
-      if (deleteEntities.length === 1) {
-        successMsg = `Xóa thành công danh mục có mã ${deleteEntities[0].code}`
-      } else {
-        successMsg = `Xóa thành công ${deleteEntities.length} danh mục`
-      }
-      openToast({
-        msg: successMsg,
-        type: ToastMsgType.Success,
-      })
-    } catch (error) {
-      console.log(error)
-      openToast({
-        msg: 'Xóa thất bại',
-        type: ToastMsgType.Danger,
-      })
-    } finally {
-      setIsLoadingDelete(false)
-      closePopupConfirm()
-      getPaging(searchParams)
-    }
   }
 
   return (
     <div className="h-full">
       <Head>
-        <title>Quản lý danh mục</title>
+        <title>Quản lý đơn hàng</title>
       </Head>
-      <h2 className="font-bold text-xl mb-6 leading-none">Quản lý danh mục</h2>
+      <h2 className="font-bold text-xl mb-6 leading-none">Quản lý đơn hàng</h2>
 
       <div className="flex items-start justify-between mb-6">
         <div className="w-80">
           <MyTextField
             id="searchText"
             name="searchText"
-            placeholder="Nhập tên, mã danh mục"
+            placeholder="Nhập mã đơn hàng, tên người đặt"
             startIcon={<i className="fa-solid fa-magnifying-glass text-gray-500"></i>}
             value={searchParams.searchText}
             onChange={handleChangeSearchText}
           />
         </div>
         <div className="flex items-center gap-x-4">
+          <div className="w-60">
+            <MySelect
+              id="status"
+              name="status"
+              label="Trạng thái"
+              isHorizontal={true}
+              value={searchParams.status}
+              options={STATUS_OPTIONS}
+              onChange={handleChangeStatus}
+            />
+          </div>
           <div className="w-60">
             <MySelect
               id="sort"
@@ -308,13 +386,6 @@ const AdminCategoriesPage = () => {
               onChange={handleChangeSortDirection}
             />
           </div>
-          <div>
-            <MyButton
-              text="Thêm mới"
-              startIcon={<i className="fa-solid fa-plus"></i>}
-              onClick={() => openPopupAdd()}
-            />
-          </div>
         </div>
       </div>
 
@@ -328,14 +399,11 @@ const AdminCategoriesPage = () => {
           rowIdField="id"
           haveRowIndex={true}
           selectedRows={[]}
+          stickyFirstColumn={true}
           editIcon={
-            <i className="fa-solid fa-pen-to-square text-lg leading-none text-gray-700 cursor-pointer transition-colors hover:text-primary"></i>
-          }
-          deleteIcon={
-            <i className="fa-solid fa-trash ext-lg text-gray-700 leading-none cursor-pointer transition-colors hover:text-red-600"></i>
+            <i className="fa-solid fa-eye text-lg leading-none text-gray-700 cursor-pointer transition-colors hover:text-primary"></i>
           }
           onEdit={handleClickEdit}
-          onDelete={handleClickDelete}
         />
       </div>
 
@@ -349,11 +417,18 @@ const AdminCategoriesPage = () => {
         />
       </div>
 
-      <PopupAddCategory
-        isActive={isActivePopupAdd}
-        categoryId={editEntityId}
-        onClose={closePopupAdd}
-        onSave={handleSaveEntity}
+      <PopupOrderDetail
+        isActive={isActivePopupDetail}
+        isAdminView={true}
+        orderId={editEntityId}
+        onClose={closePopupDetail}
+      />
+
+      {/* <PopupAddCategory
+        isActive={isActivePopupAddCategory}
+        categoryId={editCategoryId}
+        onClose={closePopupAddCategory}
+        onSave={handleSaveCategory}
       />
 
       <MyPopupConfirm
@@ -362,21 +437,21 @@ const AdminCategoriesPage = () => {
         onClose={closePopupConfirm}
         onAgree={handleDelete}
       >
-        {deleteEntities.length > 1 ? (
+        {deleteCategories.length > 1 ? (
           <div>
-            <span>{`Xác nhận xóa ${deleteEntities.length} danh mục`}</span>
+            <span>{`Xác nhận xóa ${deleteCategories.length} danh mục`}</span>
           </div>
-        ) : deleteEntities.length > 0 ? (
+        ) : deleteCategories.length > 0 ? (
           <div>
             <span>{`Xác nhận xóa danh mục với mã `}</span>
-            <span className="font-medium">{deleteEntities[0].code}</span>
+            <span className="font-medium">{deleteCategories[0].code}</span>
           </div>
         ) : (
           <div></div>
         )}
-      </MyPopupConfirm>
+      </MyPopupConfirm> */}
     </div>
   )
 }
 
-export default AdminCategoriesPage
+export default AdminOrdersPage
