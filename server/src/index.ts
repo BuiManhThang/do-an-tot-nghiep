@@ -7,6 +7,7 @@ import productRouter from './routers/productRouter'
 import categoryRouter from './routers/categoryRouter'
 import orderRouter from './routers/orderRouter'
 import reviewRouter from './routers/reviewRouter'
+import viewHistoryRouter from './routers/viewHistoryRouter'
 
 dotenv.config()
 const PORT = process.env.PORT || 3001
@@ -29,6 +30,7 @@ app.use('/api/v1/products', productRouter)
 app.use('/api/v1/categories', categoryRouter)
 app.use('/api/v1/orders', orderRouter)
 app.use('/api/v1/reviews', reviewRouter)
+app.use('/api/v1/viewHistory', viewHistoryRouter)
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`)

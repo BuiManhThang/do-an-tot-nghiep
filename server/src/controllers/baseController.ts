@@ -21,6 +21,10 @@ export class BaseController {
     return res.sendStatus(404)
   }
 
+  notContent = (res: Response) => {
+    return res.sendStatus(204)
+  }
+
   success = (res: Response, data: any) => {
     return res.status(200).json(data)
   }

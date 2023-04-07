@@ -1,10 +1,12 @@
 import baseApi from '@/apis/baseApi'
+import { handleClientError } from '@/common/errorHandler'
 import MyButton from '@/components/my-button/MyButton'
 import MyPaging from '@/components/my-paging/MyPaging'
 import MyPopupConfirm from '@/components/my-popup/MyPopupConfirm'
 import MySelect, { MySelectOption } from '@/components/my-select/MySelect'
 import MyTable, { Column, TableAlign, TableDataType } from '@/components/my-table/MyTable'
 import MyTextField from '@/components/my-text-field/MyTextField'
+import PopupUserDetail from '@/components/popup-user-detail/PopupUserDetail'
 import { ToastMsgType } from '@/enum/toastMsg'
 import { useToastMsg } from '@/hooks/toastMsgHook'
 import { PagingResult } from '@/types/paging'
@@ -143,7 +145,7 @@ const AdminUsersPage = () => {
   const [isActiveConfigm, setIsActiveConfirm] = useState<boolean>(false)
   const [isLoadingDelete, setIsLoadingDelete] = useState<boolean>(false)
   const [editEntityId, setEditEntityId] = useState<string>('')
-  const [isActivePopupAdd, setIsActivePopupAdd] = useState(false)
+  const [isActivePopupDetail, setIsActivePopupDetail] = useState(false)
   const [deleteEntities, setDeleteEntities] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [entities, setEntities] = useState<User[]>([])
@@ -249,26 +251,26 @@ const AdminUsersPage = () => {
     getPaging(newSearchParams)
   }
 
-  const openPopupAdd = (entityId?: string) => {
+  const openPopupDetail = (entityId?: string) => {
     if (entityId) {
       setEditEntityId(entityId)
     } else {
       setEditEntityId('')
     }
-    setIsActivePopupAdd(true)
+    setIsActivePopupDetail(true)
   }
 
-  const closePopupAdd = () => {
-    setIsActivePopupAdd(false)
+  const closePopupDetail = () => {
+    setIsActivePopupDetail(false)
   }
 
   const handleSaveEntity = () => {
-    closePopupAdd()
+    closePopupDetail()
     getPaging(searchParams)
   }
 
   const handleClickEdit = (e: User) => {
-    openPopupAdd(e.id)
+    openPopupDetail(e.id)
   }
 
   const openPopupConfirm = () => {
@@ -303,9 +305,13 @@ const AdminUsersPage = () => {
         type: ToastMsgType.Success,
       })
     } catch (error) {
-      console.log(error)
+      let msg = 'Xóa thất bại'
+      const errorResult = handleClientError(error)
+      if (errorResult.order) {
+        msg = errorResult.order
+      }
       openToast({
-        msg: 'Xóa thất bại',
+        msg,
         type: ToastMsgType.Danger,
       })
     } finally {
@@ -360,7 +366,7 @@ const AdminUsersPage = () => {
             <MyButton
               text="Thêm mới"
               startIcon={<i className="fa-solid fa-plus"></i>}
-              onClick={() => openPopupAdd()}
+              onClick={() => openPopupDetail()}
             />
           </div>
         </div>
@@ -397,12 +403,12 @@ const AdminUsersPage = () => {
         />
       </div>
 
-      {/* <PopupAddCategory
-        isActive={isActivePopupAdd}
-        categoryId={editEntityId}
-        onClose={closePopupAdd}
+      <PopupUserDetail
+        isActive={isActivePopupDetail}
+        entityId={editEntityId}
+        onClose={closePopupDetail}
         onSave={handleSaveEntity}
-      /> */}
+      />
 
       <MyPopupConfirm
         isActive={isActiveConfigm}

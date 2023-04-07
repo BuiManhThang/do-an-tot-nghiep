@@ -81,6 +81,15 @@ export type Review = {
   updatedAt: Date
 }
 
+export type ViewHistory = {
+  id: string
+  userId: string
+  productId: string
+  product: Product
+  createdAt: Date
+  updatedAt: Date
+}
+
 export type UserAddress = {
   district?: string | null
   city?: string | null

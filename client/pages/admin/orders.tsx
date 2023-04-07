@@ -133,7 +133,7 @@ const COLUMNS: Column[] = [
       return (
         <div className="flex items-center justify-center">
           <div
-            className={`flex items-center justify-center font-medium border-2 rounded-md px-4 cursor-default ${
+            className={`flex items-center justify-center font-medium border-2 rounded-md cursor-default w-36 ${
               order.status === OrderStatus.Pending
                 ? 'border-orange-500 text-orange-500'
                 : order.status === OrderStatus.Confirmed
@@ -321,13 +321,11 @@ const AdminOrdersPage = () => {
     setIsActivePopupDetail(true)
   }
 
-  const closePopupDetail = () => {
+  const closePopupDetail = (isReload: boolean = false) => {
     setIsActivePopupDetail(false)
-  }
-
-  const handleSaveEntity = () => {
-    closePopupDetail()
-    getPaging(searchParams)
+    if (isReload) {
+      getPaging(searchParams)
+    }
   }
 
   const handleClickEdit = (e: Order) => {

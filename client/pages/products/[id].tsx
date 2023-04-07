@@ -8,7 +8,7 @@ import MyCounter from '@/components/my-counter/MyCounter'
 import MyDisplayStars from '@/components/my-display-stars/MyDisplayStars'
 import { formatMoney } from '@/common/format'
 import MyButton, { MyButtonType } from '@/components/my-button/MyButton'
-import { useAppDispatch } from '@/hooks/reduxHook'
+import { useAppDispatch, useAppSelector } from '@/hooks/reduxHook'
 import { addToCart } from '@/store/reducers/cartSlice'
 import { ProductInCart } from '@/types/user'
 import { useToastMsg } from '@/hooks/toastMsgHook'
@@ -18,6 +18,7 @@ import ProductCard from '@/components/product-card/ProductCard'
 import { PagingResult } from '@/types/paging'
 import ReviewItem from '@/components/review-item/ReviewItem'
 import Link from 'next/link'
+import { ViewHistory } from '@/types/viewHistory'
 
 const getRelatedProductsFunc = async (categoryId: string): Promise<Product[]> => {
   const res = await baseApi.get('products/paging', {
@@ -28,12 +29,24 @@ const getRelatedProductsFunc = async (categoryId: string): Promise<Product[]> =>
   return relatedProducts
 }
 
+const getViewedProductsFunc = async (userId: string): Promise<Product[]> => {
+  const res = await baseApi.get('viewHistory/paging', {
+    userId,
+  })
+  const pagingResult: PagingResult = res.data
+  const viewHistory: ViewHistory[] = pagingResult.data
+  const products = viewHistory.map((v) => v.product)
+  return products
+}
+
 const ProductDetailPage = () => {
   const router = useRouter()
+  const userInfo = useAppSelector((state) => state.user.userInfo)
   const dispatch = useAppDispatch()
   const { openToast } = useToastMsg()
   const [productData, setProductData] = useState<Product>()
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
+  const [viewedProducts, setViewedProducts] = useState<Product[]>([])
   const [buyNumber, setBuyNumber] = useState<number>(1)
   const [avgScore, setAvgScore] = useState(0)
   const [totalReviews, setTotalReviews] = useState(0)
@@ -48,6 +61,17 @@ const ProductDetailPage = () => {
       }
     }
 
+    const handleViewHistory = async () => {
+      const productId = router.query.id
+      if (!userInfo?.id || typeof productId !== 'string') return
+      const viewedProductsRes = await getViewedProductsFunc(userInfo.id)
+      setViewedProducts(viewedProductsRes)
+      if (viewedProductsRes.find((p) => p.id === productId)) return
+      await baseApi.post('viewHistory/user', {
+        productId: productId,
+      })
+    }
+
     const getInitData = async () => {
       if (!router.query.id) return
       try {
@@ -55,13 +79,14 @@ const ProductDetailPage = () => {
         const productDataRes: Product = res.data
         getRelatedProducts(productDataRes.categoryId)
         setProductData(productDataRes)
+        handleViewHistory()
       } catch (error) {
         console.log(error)
       }
     }
 
     getInitData()
-  }, [router, router.query.id])
+  }, [router.query.id, userInfo?.id])
 
   const handleClickAddToCart = () => {
     if (!productData) return
@@ -185,6 +210,18 @@ const ProductDetailPage = () => {
           </div>
         </div>
 
+        {/* Comment */}
+        <div id="comment-section" className="w-full px-6 lg:w-[1200px] lg:px-0 lg:mx-auto">
+          <div className="mt-14">
+            <h2 className="text-left font-bold text-3xl leading-[45px]">Đánh giá sản phẩm</h2>
+            <ReviewItem
+              productId={router.query.id?.toString() || ''}
+              onChangeAvgScore={(e: number) => setAvgScore(e)}
+              onChangeTotalReviews={(e: number) => setTotalReviews(e)}
+            />
+          </div>
+        </div>
+
         {/* Related */}
         <div className="w-full px-6 lg:w-[1200px] lg:px-0 lg:mx-auto">
           <div className="mt-14">
@@ -208,15 +245,15 @@ const ProductDetailPage = () => {
           </div>
         </div>
 
-        {/* Comment */}
-        <div id="comment-section" className="w-full px-6 lg:w-[1200px] lg:px-0 lg:mx-auto">
+        {/* Viewed */}
+        <div className="w-full px-6 lg:w-[1200px] lg:px-0 lg:mx-auto">
           <div className="mt-14">
-            <h2 className="text-left font-bold text-3xl leading-[45px]">Đánh giá sản phẩm</h2>
-            <ReviewItem
-              productId={router.query.id?.toString() || ''}
-              onChangeAvgScore={(e: number) => setAvgScore(e)}
-              onChangeTotalReviews={(e: number) => setTotalReviews(e)}
-            />
+            <h2 className="text-left font-bold text-3xl mb-6">Sản phẩm đã xem</h2>
+            <ProductCardList>
+              {viewedProducts.map((product) => (
+                <ProductCard product={product} key={product.id} />
+              ))}
+            </ProductCardList>
           </div>
         </div>
       </main>

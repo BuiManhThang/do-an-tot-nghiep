@@ -6,7 +6,6 @@ import { useAppDispatch, useAppSelector } from '@/hooks/reduxHook'
 import { useToastMsg } from '@/hooks/toastMsgHook'
 import { Header } from '@/pages/cart'
 import { Order } from '@/types/order'
-import { AxiosError } from 'axios'
 import React, { useEffect, useState } from 'react'
 import CartItem from '../cart-item/CartItem'
 import MyButton, { MyButtonType } from '../my-button/MyButton'
@@ -51,9 +50,8 @@ const PopupOrderDetail = ({
   isAdminView = false,
   onClose = () => {},
 }: Props) => {
-  const dispatch = useAppDispatch()
   const { openToast } = useToastMsg()
-  const userInfo = useAppSelector((state) => state.user.userInfo)
+  const [isConfirm, setIsConfirm] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isActivePopupCancelOrder, setIsActivePopupCancelOrder] = useState(false)
   const [isLoadingCancelOrder, setIsLoadingCancelOrder] = useState(false)
@@ -88,12 +86,15 @@ const PopupOrderDetail = ({
     setIsLoadingCancelOrder(true)
     try {
       let msg = ''
-      if (isAdminView && orderDetail?.status === OrderStatus.Pending) {
+      if (isAdminView && orderDetail?.status === OrderStatus.Pending && isConfirm) {
         await baseApi.put(`orders/${orderDetail?.id}`, {
           ...orderDetail,
           status: OrderStatus.Confirmed,
         })
         msg = `Xác nhận thành công đơn hàng số <${orderDetail.code}>`
+      } else if (isAdminView && orderDetail?.status === OrderStatus.Pending && !isConfirm) {
+        await baseApi.delete(`orders/${orderDetail.id}`)
+        msg = `Hủy thành công đơn hàng số <${orderDetail.code}>`
       } else if (isAdminView && orderDetail?.status === OrderStatus.Confirmed) {
         await baseApi.put(`orders/${orderDetail.id}`, {
           ...orderDetail,
@@ -257,7 +258,7 @@ const PopupOrderDetail = ({
             {isAdminView ? (
               <div className="flex w-[500px] overflow-hidden">
                 {orderDetail?.status === OrderStatus.Pending ? (
-                  <div className="w-full shrink-0 grid grid-cols-2 gap-x-4 transition-all duration-200">
+                  <div className="w-full shrink-0 grid grid-cols-3 gap-x-2 transition-all duration-200">
                     <MyButton
                       style={{
                         width: '100%',
@@ -272,8 +273,25 @@ const PopupOrderDetail = ({
                         width: '100%',
                         height: '52px',
                       }}
+                      text="Hủy đơn hàng"
+                      type={MyButtonType.Secondary}
+                      onClick={() => {
+                        setIsActivePopupCancelOrder(true)
+                        setIsConfirm(false)
+                      }}
+                    />
+                    <MyButton
+                      style={{
+                        width: '100%',
+                        height: '52px',
+                        paddingLeft: '4px',
+                        paddingRight: '4px',
+                      }}
                       text="Xác nhận đơn hàng"
-                      onClick={() => setIsActivePopupCancelOrder(true)}
+                      onClick={() => {
+                        setIsActivePopupCancelOrder(true)
+                        setIsConfirm(true)
+                      }}
                     />
                   </div>
                 ) : orderDetail?.status === OrderStatus.Confirmed ? (
@@ -356,7 +374,9 @@ const PopupOrderDetail = ({
             <div>
               {isAdminView
                 ? orderDetail?.status === OrderStatus.Pending
-                  ? 'Bạn có chắc chắn xác nhận đơn hàng?'
+                  ? isConfirm
+                    ? 'Bạn có chắc chắn xác nhận đơn hàng?'
+                    : 'Bạn có chắc chắn muốn hủy đơn hàng?'
                   : 'Bạn có chắc chắn muôn hoàn thành đơn hàng?'
                 : 'Bạn có chắc chắn muốn hủy đơn hàng?'}
             </div>

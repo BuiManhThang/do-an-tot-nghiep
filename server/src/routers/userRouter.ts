@@ -16,7 +16,7 @@ userRouter.post('/sign-in', userController.signIn)
 userRouter.post('/sign-out', userController.signOut)
 userRouter.post('/', authorizeAdmin, userController.create)
 
-userRouter.put('/:id', authorizeAdmin, userController.update)
+userRouter.put('/:id', userController.update)
 userRouter.delete('/:id', authorizeAdmin, userController.delete)
 
 export default userRouter

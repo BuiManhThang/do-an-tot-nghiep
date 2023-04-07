@@ -29,6 +29,12 @@ export default class UserController extends BaseController {
   create = async (req: Request, res: Response) => {
     try {
       const user: CreateUserDto = req.body
+
+      const salt = await genSalt(10)
+      const password = 'User12345'
+      const encodedPassword = await hash(password, salt)
+      user.password = encodedPassword
+
       const newUser = await this.createEntity(user)
       return this.created(res, newUser)
     } catch (error) {
@@ -263,6 +269,35 @@ export default class UserController extends BaseController {
       if (!model) {
         return this.notFound(res)
       }
+
+      const order = await this.prisma.order.findFirst({
+        where: {
+          userId: id,
+        },
+      })
+      if (order) {
+        const validateErrors: ValidateError[] = [
+          {
+            field: 'order',
+            value: '',
+            msg: 'Không thể xóa người dùng đã phát sinh đơn hàng',
+          },
+        ]
+        return this.clientError(res, validateErrors)
+      }
+
+      await Promise.all([
+        this.prisma.review.deleteMany({
+          where: {
+            userId: id,
+          },
+        }),
+        this.prisma.viewHistory.deleteMany({
+          where: {
+            userId: id,
+          },
+        }),
+      ])
 
       const deletedModel = await this.model.delete({
         where: {

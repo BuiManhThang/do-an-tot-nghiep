@@ -45,9 +45,21 @@ export type WhereOrderParam = WhereParam & {
 
 export type PagingReviewParam = PagingParam & {
   productId?: string
+  userId?: string
 }
 
 export type WhereReviewParam = WhereParam & {
+  productId?: string
+  userId?: string
+}
+
+export type PagingViewHistoryParam = PagingParam & {
+  userId?: string
+  productId?: string
+}
+
+export type WhereViewHistoryParam = WhereParam & {
+  userId?: string
   productId?: string
 }
 
@@ -170,4 +182,9 @@ export type CreateReviewDto = {
 export type UpdateReviewDto = {
   score: number
   comment: string
+}
+
+export type CreateViewHistoryDto = {
+  userId: string
+  productId: string
 }

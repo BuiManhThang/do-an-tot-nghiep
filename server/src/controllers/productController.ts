@@ -109,14 +109,26 @@ export default class ProductController extends BaseController {
       }
 
       // Xóa sản phẩm trong giỏ hàng
-      await this.prisma.user.updateMany({
-        where: {
-          cart: { some: { id: id } },
-        },
-        data: {
-          cart: { deleteMany: { where: { id: id } } },
-        },
-      })
+      await Promise.all([
+        this.prisma.user.updateMany({
+          where: {
+            cart: { some: { id: id } },
+          },
+          data: {
+            cart: { deleteMany: { where: { id: id } } },
+          },
+        }),
+        this.prisma.review.deleteMany({
+          where: {
+            productId: id,
+          },
+        }),
+        this.prisma.viewHistory.deleteMany({
+          where: {
+            productId: id,
+          },
+        }),
+      ])
 
       const deletedModel = await this.model.delete({
         where: {

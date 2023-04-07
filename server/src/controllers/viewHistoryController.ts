@@ -1,30 +1,62 @@
 import { PrismaClient } from '@prisma/client'
 import { Request, Response } from 'express'
 import { BaseController } from './baseController'
-import { Category, Review } from '../models/entity'
+import { ViewHistory } from '../models/entity'
 import {
-  CreateCategoryDto,
-  CreateReviewDto,
-  PagingParam,
+  CreateViewHistoryDto,
   PagingResult,
-  PagingReviewParam,
-  UpdateCategoryDto,
-  UpdateReviewDto,
-  WhereReviewParam,
+  PagingViewHistoryParam,
+  WhereViewHistoryParam,
 } from '../models/dto'
 
-export default class ReviewController extends BaseController {
+export default class ViewHistoryController extends BaseController {
   private readonly prisma: PrismaClient
   private readonly model
   constructor() {
     super()
     this.prisma = new PrismaClient()
-    this.model = this.prisma.review
+    this.model = this.prisma.viewHistory
   }
 
   create = async (req: Request, res: Response) => {
     try {
-      const entity: CreateReviewDto = req.body
+      const entity: CreateViewHistoryDto = req.body
+      const newEntity = await this.createEntity(entity)
+      return this.created(res, newEntity)
+    } catch (error) {
+      return this.serverError(res, error)
+    }
+  }
+
+  userCreate = async (req: Request, res: Response) => {
+    try {
+      const entity: CreateViewHistoryDto = req.body
+
+      const product = await this.prisma.product.findFirst({
+        where: {
+          id: entity.productId,
+        },
+      })
+      if (!product) return this.notFound(res)
+
+      const entities = await this.model.findMany({
+        where: {
+          userId: entity.userId,
+        },
+        take: 4,
+        orderBy: { createdAt: 'asc' },
+      })
+
+      if (entities.length >= 4) {
+        await this.model.delete({
+          where: {
+            id: entities[0].id,
+          },
+        })
+      }
+      const existedEntity = entities.find((e) => e.productId === entity.productId)
+      if (existedEntity) return this.notContent(res)
+
       const newEntity = await this.createEntity(entity)
       return this.created(res, newEntity)
     } catch (error) {
@@ -35,7 +67,7 @@ export default class ReviewController extends BaseController {
   update = async (req: Request, res: Response) => {
     try {
       const entityId: string = req.params.id
-      const entity: UpdateReviewDto = req.body
+      const entity: CreateViewHistoryDto = req.body
 
       const model = await this.model.findFirst({
         where: {
@@ -46,7 +78,7 @@ export default class ReviewController extends BaseController {
         return this.notFound(res)
       }
 
-      this.setPrevValue(entity, model as Review)
+      this.setPrevValue(entity, model as ViewHistory)
 
       const updatedEntity = await this.updateEntity(entityId, entity)
       return this.updated(res, updatedEntity)
@@ -106,11 +138,11 @@ export default class ReviewController extends BaseController {
 
   getPaging = async (req: Request, res: Response) => {
     try {
-      const { pageIndex, pageSize, sort, direction, searchText, productId, userId } =
-        req.query as PagingReviewParam
+      const { pageIndex, pageSize, sort, direction, userId, productId } =
+        req.query as PagingViewHistoryParam
       let skip = undefined
       let take = undefined
-      let where: WhereReviewParam = {}
+      let where: WhereViewHistoryParam = {}
       let orderBy = undefined
 
       // Paging
@@ -129,49 +161,24 @@ export default class ReviewController extends BaseController {
       }
 
       // Filter
-      if (searchText) {
-        where.OR = [
-          {
-            user: {
-              OR: [
-                { code: { contains: searchText } },
-                { name: { contains: searchText } },
-                { email: { contains: searchText } },
-              ],
-            },
-          },
-          {
-            product: {
-              OR: [{ code: { contains: searchText } }, { name: { contains: searchText } }],
-            },
-          },
-        ]
-      }
-      if (productId !== undefined) {
-        where.productId = productId
-      }
-      if (userId !== undefined) {
+      if (userId) {
         where.userId = userId
+      }
+      if (productId) {
+        where.productId = productId
       }
 
       const [entities, entitiesCount] = await Promise.all([
         this.model.findMany({
           include: {
-            user: {
-              select: {
-                id: true,
-                avatar: true,
-                code: true,
-                email: true,
-                name: true,
-                phoneNumber: true,
-              },
-            },
             product: {
               select: {
                 image: true,
-                code: true,
                 name: true,
+                id: true,
+                price: true,
+                unit: true,
+                code: true,
               },
             },
           },
@@ -195,37 +202,35 @@ export default class ReviewController extends BaseController {
     }
   }
 
-  private createEntity = async (entity: CreateReviewDto) => {
+  private createEntity = async (entity: CreateViewHistoryDto) => {
     const newEntity = await this.model.create({
       data: {
-        productId: entity.productId,
         userId: entity.userId,
-        score: entity.score,
-        comment: entity.comment,
+        productId: entity.productId,
       },
     })
     return newEntity
   }
 
-  private updateEntity = async (entityId: string, entity: UpdateReviewDto) => {
+  private updateEntity = async (entityId: string, entity: CreateViewHistoryDto) => {
     const updatedEntity = await this.model.update({
       where: {
         id: entityId,
       },
       data: {
-        score: entity.score,
-        comment: entity.comment,
+        userId: entity.userId,
+        productId: entity.productId,
       },
     })
     return updatedEntity
   }
 
-  private setPrevValue = (newEntity: UpdateReviewDto, oldEntity: Review) => {
-    if (!newEntity.score) {
-      newEntity.score = oldEntity.score
+  private setPrevValue = (newEntity: CreateViewHistoryDto, oldEntity: ViewHistory) => {
+    if (!newEntity.userId) {
+      newEntity.userId = oldEntity.userId
     }
-    if (!newEntity.comment) {
-      newEntity.comment = oldEntity.comment
+    if (!newEntity.productId) {
+      newEntity.productId = oldEntity.productId
     }
   }
 }
