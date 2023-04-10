@@ -1,18 +1,18 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import { Category } from '@/types/category'
+import { createSlice } from '@reduxjs/toolkit'
 import baseApi from '@/apis/baseApi'
-import { PagingResult } from '@/types/paging'
 import { ProductInCart } from '@/types/user'
-import { Product } from '@/types/product'
+import { RequestStatus } from '@/enum/requestStatus'
 
 // Define a type for the slice state
 interface CartState {
   products: ProductInCart[]
+  status: RequestStatus
 }
 
 // Define the initial state using that type
 const initialState: CartState = {
   products: [],
+  status: RequestStatus.Pending,
 }
 
 export const cartSlice = createSlice({
@@ -83,6 +83,7 @@ export const cartSlice = createSlice({
       }
       if (products.length === 0) {
         state.products = productsLocal
+        state.status = RequestStatus.Success
         return
       }
       const newProducts = products.map((product) => {
@@ -97,6 +98,7 @@ export const cartSlice = createSlice({
         }
       })
       state.products = newProducts
+      state.status = RequestStatus.Success
     },
     removeCart: (state) => {
       state.products = []

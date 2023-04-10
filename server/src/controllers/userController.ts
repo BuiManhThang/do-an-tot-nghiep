@@ -400,6 +400,40 @@ export default class UserController extends BaseController {
     try {
       const id: string = req.body.userId
       const model = await this.model.findFirst({
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          email: true,
+          address: true,
+          avatar: true,
+          cart: true,
+          isAdmin: true,
+          phoneNumber: true,
+          viewHistorys: {
+            select: {
+              product: {
+                select: {
+                  id: true,
+                  code: true,
+                  name: true,
+                  image: true,
+                  price: true,
+                  unit: true,
+                  categoryId: true,
+                  category: {
+                    select: {
+                      id: true,
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          createdAt: true,
+          updatedAt: true,
+        },
         where: {
           id,
         },

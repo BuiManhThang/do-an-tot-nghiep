@@ -18,6 +18,7 @@ type MyTextFieldProps = {
   required?: boolean
   isHorizontal?: boolean
   isOptionsTop?: boolean
+  disabled?: boolean
   displayedItems?: number
   isParentLoading?: boolean
   startIcon?: HTMLElement | ReactElement
@@ -37,6 +38,7 @@ const MySelect = ({
   required = false,
   isHorizontal = false,
   isOptionsTop = false,
+  disabled = false,
   displayedItems = 5,
   isParentLoading = false,
   startIcon,
@@ -48,12 +50,12 @@ const MySelect = ({
   const [isActive, setIsActive] = useState<boolean>(false)
   const [hoverIndex, setHoverIndex] = useState<number>(-1)
 
-  let inputClassName = `h-9 border border-gray-400 rounded-md outline-none ring-primary-ring caret-primary px-3 w-full transition-colors focus:border-primary focus:ring-2 pr-10 cursor-pointer ${
+  let inputClassName = `h-9 border border-gray-400 rounded-md outline-none ring-primary-ring caret-primary px-3 w-full transition-colors focus:border-primary focus:ring-2 pr-10 cursor-pointer disabled:bg-slate-200 ${
     startIcon ? 'pl-10' : 'pl-3'
   }`
 
   if (error) {
-    inputClassName = `h-9 border border-red-600 rounded-md outline-none ring-red-200 caret-primary pr-10 w-full transition-colors focus:border-red-600 focus:ring-2 pr-16 cursor-pointer ${
+    inputClassName = `h-9 border border-red-600 rounded-md outline-none ring-red-200 caret-primary pr-10 w-full transition-colors focus:border-red-600 focus:ring-2 pr-16 cursor-pointer disabled:bg-slate-200 ${
       startIcon ? 'pl-10' : 'pl-3'
     }`
   }
@@ -182,6 +184,7 @@ const MySelect = ({
           value={inputValue}
           autoComplete="off"
           readOnly={true}
+          disabled={disabled}
           className={inputClassName}
           style={inputStyle}
           onChange={handleChange}

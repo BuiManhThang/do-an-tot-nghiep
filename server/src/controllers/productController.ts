@@ -45,7 +45,7 @@ export default class ProductController extends BaseController {
         return this.notFound(res)
       }
 
-      this.setPrevValue(entity, model as Product)
+      this.setPrevValue(entity, model as unknown as Product)
 
       const updatedEntity = await this.updateEntity(entityId, entity)
 

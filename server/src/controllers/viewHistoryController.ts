@@ -173,12 +173,19 @@ export default class ViewHistoryController extends BaseController {
           include: {
             product: {
               select: {
-                image: true,
-                name: true,
                 id: true,
+                code: true,
+                name: true,
+                image: true,
                 price: true,
                 unit: true,
-                code: true,
+                categoryId: true,
+                category: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
           },

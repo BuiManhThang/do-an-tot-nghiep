@@ -16,6 +16,10 @@ import { PagingResult } from '@/types/paging'
 import baseApi from '@/apis/baseApi'
 import { Category } from '@/types/category'
 import { useAppSelector } from '@/hooks/reduxHook'
+import { RequestStatus } from '@/enum/requestStatus'
+import { useRouter } from 'next/router'
+import MyLoadingSkeleton from '@/components/my-loading-skeleton/MyLoadingSkeleton'
+import LoadingProductCart from '@/components/loading-product-card/LoadingProductCart'
 
 const IMAGES = [Image1, Image2, Image3, Image4, Image5]
 const IMAGES_2 = [Image3, Image4, Image5]
@@ -24,7 +28,7 @@ const WHY_CHOOSE = [
   {
     title: 'Chính sách bảo hành đảm bảo',
     content:
-      'Chính sách bảo hành lên tới một năm đối với các lỗi do sản phẩm gây ra, bảo hành 1 đổi 1 trong vòng 1 tháng.',
+      'Chính sách bảo hành lên tới một năm đối với các lỗi do sản phẩm gây ra, bảo hành 1 đổi 1 trong vòng 24 giờ.',
     icon: <i className="far fa-hand-paper"></i>,
   },
   {
@@ -34,10 +38,10 @@ const WHY_CHOOSE = [
     icon: <i className="fas fa-rocket"></i>,
   },
   {
-    title: 'Miễn phí sửa chữa',
+    title: 'Miễn phí đổi trả',
     content:
-      'Chúng tôi thực hiện chính sách sửa chữa sản phẩm trong vòng 6 tháng sau khi mua sản phẩm.',
-    icon: <i className="fas fa-tools"></i>,
+      'Chúng tôi thực hiện chính sách đổi trả sản phẩm trong vòng 24 sau khi đặt mua sản phẩm.',
+    icon: <i className="fa-solid fa-recycle"></i>,
   },
 ]
 
@@ -106,9 +110,24 @@ const getCategoryWithProductsFunc = async (categories: Category[]) => {
   return result
 }
 
+const getSuggestionFunc = async (productIds: string[]) => {
+  const res = await baseApi.get('associationRules/suggestion', {
+    ids: productIds.join(';'),
+  })
+  const products: Product[] = res.data
+  return products
+}
+
 export default function Home() {
+  const router = useRouter()
   const categories = useAppSelector((state) => state.navbar.categories)
+  const cartProducts = useAppSelector((state) => state.cart.products)
+  const viewHistoryProductIds = useAppSelector((state) => state.viewHistory.productIds)
+  const statusInitCart = useAppSelector((state) => state.cart.status)
+  const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false)
+  const [isLoadingProductsCategory, setIsLoadingProductsCategory] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([])
   const [categoryWithProducts, setCategoryWithProducts] = useState<CategoryWithProducts[]>([])
   const [sliderHeight, setSliderHeight] = useState(620)
 
@@ -131,11 +150,14 @@ export default function Home() {
 
   useEffect(() => {
     const getCategoryWithProducts = async () => {
+      setIsLoadingProductsCategory(true)
       try {
         const res = await getCategoryWithProductsFunc(categories)
         setCategoryWithProducts(res)
       } catch (error) {
         console.log(error)
+      } finally {
+        setIsLoadingProductsCategory(false)
       }
     }
 
@@ -143,6 +165,26 @@ export default function Home() {
       getCategoryWithProducts()
     }
   }, [categories])
+
+  useEffect(() => {
+    const getSuggestion = async () => {
+      setIsLoadingSuggestion(true)
+      const cartProductIds = cartProducts.map((p) => p.id)
+      try {
+        const res = await getSuggestionFunc([...cartProductIds, ...viewHistoryProductIds])
+        setSuggestedProducts(res)
+      } catch (error) {
+        console.log(error)
+        setSuggestedProducts([])
+      } finally {
+        setIsLoadingSuggestion(false)
+      }
+    }
+    if (statusInitCart !== RequestStatus.Pending) {
+      getSuggestion()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusInitCart])
 
   return (
     <>
@@ -177,32 +219,23 @@ export default function Home() {
             ))}
           </div>
 
-          {/* <div className="mt-8">
-            <h2 className="text-center font-bold text-3xl mb-6">Sản phẩm gợi ý</h2>
-            <ProductCardList>
-              {PRODUCTS.map((product) => (
-                <ProductCard product={product} key={product.id} />
-              ))}
-            </ProductCardList>
-            <div className="mt-8 flex items-center justify-center">
-              <MyButton
-                text="Xem tất cả sản phẩm"
-                endIcon={<i className="fa-solid fa-chevron-right"></i>}
-                type={MyButtonType.PrimarySolid}
-                style={{
-                  padding: '0 32px',
-                  height: '42px',
-                }}
-              />
-            </div>
-          </div> */}
-
-          {categoryWithProducts.map((categoryWithProduct, index) => {
-            return (
-              <div className="mt-8" key={index}>
-                <h2 className="text-center font-bold text-3xl mb-6">{categoryWithProduct.name}</h2>
+          <div className="mt-8">
+            <h2 className="text-center font-bold text-3xl mb-6">Sản phẩm để xuất</h2>
+            {isLoadingSuggestion ? (
+              <>
                 <ProductCardList>
-                  {categoryWithProduct.products.map((product) => (
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((item) => (
+                    <LoadingProductCart key={item} />
+                  ))}
+                </ProductCardList>
+                <div className="mt-8 flex items-center justify-center">
+                  <MyLoadingSkeleton className="w-[235px] h-[42px] rounded-md" />
+                </div>
+              </>
+            ) : (
+              <>
+                <ProductCardList>
+                  {suggestedProducts.map((product) => (
                     <ProductCard product={product} key={product.id} />
                   ))}
                 </ProductCardList>
@@ -215,11 +248,57 @@ export default function Home() {
                       padding: '0 32px',
                       height: '42px',
                     }}
+                    onClick={() => router.replace('/products')}
                   />
                 </div>
-              </div>
-            )
-          })}
+              </>
+            )}
+          </div>
+
+          {isLoadingProductsCategory
+            ? [1, 2, 3, 4].map((item) => (
+                <div key={item} className="mt-8">
+                  <div className="flex justify-center mb-6">
+                    <MyLoadingSkeleton className="h-9 w-72 rounded-md" />
+                  </div>
+                  <ProductCardList>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((subItem) => (
+                      <LoadingProductCart key={subItem} />
+                    ))}
+                  </ProductCardList>
+                  <div className="mt-8 flex items-center justify-center">
+                    <MyLoadingSkeleton className="w-[235px] h-[42px] rounded-md" />
+                  </div>
+                </div>
+              ))
+            : categoryWithProducts.map((categoryWithProduct, index) => {
+                return (
+                  <div className="mt-8" key={index}>
+                    <h2 className="text-center font-bold text-3xl mb-6">
+                      {categoryWithProduct.name}
+                    </h2>
+                    <ProductCardList>
+                      {categoryWithProduct.products.map((product) => (
+                        <ProductCard product={product} key={product.id} />
+                      ))}
+                    </ProductCardList>
+                    <div className="mt-8 flex items-center justify-center">
+                      <MyButton
+                        text="Xem tất cả sản phẩm"
+                        endIcon={<i className="fa-solid fa-chevron-right"></i>}
+                        type={MyButtonType.PrimarySolid}
+                        style={{
+                          padding: '0 32px',
+                          height: '42px',
+                        }}
+                        onClick={() =>
+                          router.replace(`/products?categoryId=${categoryWithProduct.id}`)
+                        }
+                      />
+                    </div>
+                  </div>
+                )
+              })}
 
           <div className="grid grid-cols-3 gap-6 text-center mt-10">
             {WHY_CHOOSE.map((item, idx) => (
@@ -229,7 +308,11 @@ export default function Home() {
                   {item.title}
                 </h3>
                 <p className="max-w-[300px] mx-auto mt-5 mb-[30px] text-base">{item.content}</p>
-                <MyButton text="Mua sắm ngay" type={MyButtonType.PrimarySolid} />
+                <MyButton
+                  text="Mua sắm ngay"
+                  type={MyButtonType.PrimarySolid}
+                  onClick={() => router.replace('/products')}
+                />
               </div>
             ))}
           </div>

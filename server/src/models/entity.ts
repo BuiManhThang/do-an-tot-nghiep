@@ -90,6 +90,27 @@ export type ViewHistory = {
   updatedAt: Date
 }
 
+export type AssociationRule = {
+  id: string
+  antecedents: string[]
+  consequents: string[]
+  antecedentSupport: number
+  consequentSupport: number
+  support: number
+  confidence: number
+  lift: number
+  productAntecedents: Product[]
+  productConsequents: Product[]
+}
+
+export type Transition = {
+  id: string
+  orderId?: string
+  order?: Order
+  productIds: string[]
+  products: Product[]
+}
+
 export type UserAddress = {
   district?: string | null
   city?: string | null

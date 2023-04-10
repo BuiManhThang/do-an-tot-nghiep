@@ -1,3 +1,5 @@
+import { ViewHistory } from './viewHistory'
+
 export type DataSignIn = {
   email: string
   password: string
@@ -26,6 +28,7 @@ export type User = {
   address?: UserAddress
   cart: ProductInCart[]
   orders: ProductInOrder[]
+  viewHistorys: ViewHistory[]
   createdAt: Date
   updatedAt: Date
 }

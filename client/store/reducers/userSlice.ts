@@ -12,7 +12,7 @@ interface UserState {
 // Define the initial state using that type
 const initialState: UserState = {
   userInfo: undefined,
-  status: RequestStatus.Success,
+  status: RequestStatus.Pending,
 }
 
 export const register = createAsyncThunk(

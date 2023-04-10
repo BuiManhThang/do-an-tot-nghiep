@@ -10,6 +10,8 @@ import { useAppDispatch, useAppSelector } from '@/hooks/reduxHook'
 import MyToastMsg from '../my-toast-msg/MyToastMsg'
 import { initCart } from '@/store/reducers/cartSlice'
 import { useLayout } from '@/hooks/layoutHook'
+import { RequestStatus } from '@/enum/requestStatus'
+import { initViewHistory } from '@/store/reducers/viewHistorySlice'
 
 type Props = {
   children?: React.ReactNode | React.ReactNode[]
@@ -18,14 +20,16 @@ type Props = {
 const TheLayout = ({ children }: Props) => {
   const router = useRouter()
   const dispatch = useAppDispatch()
-  const { isTriggerScroll, scrollToTop } = useLayout()
+  const { isTriggerScroll } = useLayout()
   const userInfo = useAppSelector((state) => state.user.userInfo)
+  const statusLoadingInfo = useAppSelector((state) => state.user.status)
   const container = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     dispatch(getCurrentUser(''))
       .unwrap()
       .then((res) => {
+        dispatch(initViewHistory(res?.viewHistorys))
         dispatch(initCart(res?.cart))
       })
   }, [dispatch])
@@ -37,6 +41,10 @@ const TheLayout = ({ children }: Props) => {
   useEffect(() => {
     container.current?.scrollTo(0, 0)
   }, [router.pathname])
+
+  if (statusLoadingInfo === RequestStatus.Pending) {
+    return <div>Loading...</div>
+  }
 
   if (router.pathname === '/sign-in' || router.pathname === '/register') {
     return (

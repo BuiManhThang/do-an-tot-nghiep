@@ -12,6 +12,8 @@ import MyCheckbox from '@/components/my-checkbox/MyCheckbox'
 import MySelect, { MySelectOption } from '@/components/my-select/MySelect'
 import MyPaging from '@/components/my-paging/MyPaging'
 import { useLayout } from '@/hooks/layoutHook'
+import LoadingProductCart from '@/components/loading-product-card/LoadingProductCart'
+import MyLoadingSkeleton from '@/components/my-loading-skeleton/MyLoadingSkeleton'
 
 type SearchParams = {
   searchText: string
@@ -77,6 +79,7 @@ const ProductsPage = () => {
   const { scrollToTop } = useLayout()
   const timeoutFunc = useRef<NodeJS.Timeout | undefined>(undefined)
   const [isLoadingProducts, setIsLoadingProducts] = useState(false)
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [totalRecords, setTotalRecords] = useState(0)
@@ -92,6 +95,7 @@ const ProductsPage = () => {
   useEffect(() => {
     const getPagingInit = async () => {
       setIsLoadingProducts(true)
+      setIsLoadingCategories(true)
       const selectedCategoryId: string = router.query.categoryId?.toString() || 'all'
       try {
         setSearchParam({
@@ -133,6 +137,7 @@ const ProductsPage = () => {
         setCategories([])
       } finally {
         setIsLoadingProducts(false)
+        setIsLoadingCategories(false)
       }
     }
 
@@ -240,6 +245,7 @@ const ProductsPage = () => {
                 id="searchText"
                 name="searchText"
                 placeholder="Nhập tên sản phẩm"
+                disabled={isLoadingCategories}
                 startIcon={<i className="fa-solid fa-magnifying-glass text-gray-500"></i>}
                 value={searchParam.searchText}
                 onChange={handleChangeSearchText}
@@ -248,28 +254,32 @@ const ProductsPage = () => {
             <div className="w-full mb-4">
               <div className="font-medium mb-3">Danh mục</div>
               <div className="grid grid-cols-2 gap-x-3 gap-y-4">
-                {categories.map((category) => (
-                  <div key={category.id}>
-                    <MyCheckbox
-                      id={`category-${category.id}`}
-                      name="category"
-                      label={category.name}
-                      size="small"
-                      style={{
-                        alignItems: 'baseline',
-                      }}
-                      labelStyle={{
-                        fontSize: '14px',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                      value={category.id}
-                      checked={searchParam.categoryId.includes(category.id)}
-                      onChange={handleChangeCategory}
-                    />
-                  </div>
-                ))}
+                {isLoadingCategories
+                  ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((item) => (
+                      <MyLoadingSkeleton key={item} className="w-full h-[21px] rounded-md" />
+                    ))
+                  : categories.map((category) => (
+                      <div key={category.id}>
+                        <MyCheckbox
+                          id={`category-${category.id}`}
+                          name="category"
+                          label={category.name}
+                          size="small"
+                          style={{
+                            alignItems: 'baseline',
+                          }}
+                          labelStyle={{
+                            fontSize: '14px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                          value={category.id}
+                          checked={searchParam.categoryId.includes(category.id)}
+                          onChange={handleChangeCategory}
+                        />
+                      </div>
+                    ))}
               </div>
             </div>
             <div className="w-full mb-4">
@@ -279,6 +289,7 @@ const ProductsPage = () => {
               <MySelect
                 id="sort"
                 name="sort"
+                disabled={isLoadingCategories}
                 value={searchParam.sort}
                 options={ORDER_BY_OPTIONS}
                 onChange={handleChangeSort}
@@ -291,6 +302,7 @@ const ProductsPage = () => {
               <MySelect
                 id="direction"
                 name="direction"
+                disabled={isLoadingCategories}
                 value={searchParam.direction}
                 options={ORDER_DIRECTION}
                 onChange={handleChangeSortDirection}
@@ -298,11 +310,19 @@ const ProductsPage = () => {
             </div>
           </div>
           <div>
-            <ProductCardList isInProductsView={true}>
-              {products.map((product) => (
-                <ProductCard product={product} key={product.id} />
-              ))}
-            </ProductCardList>
+            {isLoadingProducts ? (
+              <ProductCardList isInProductsView={true}>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((item) => (
+                  <LoadingProductCart key={item} />
+                ))}
+              </ProductCardList>
+            ) : (
+              <ProductCardList isInProductsView={true}>
+                {products.map((product) => (
+                  <ProductCard product={product} key={product.id} />
+                ))}
+              </ProductCardList>
+            )}
           </div>
         </div>
       </main>

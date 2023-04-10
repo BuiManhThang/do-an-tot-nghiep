@@ -4,6 +4,7 @@ import toastMsgReducer from './reducers/toastMsgSlice'
 import navbarReducer from './reducers/navbarSlice'
 import cartReducer from './reducers/cartSlice'
 import layoutReducer from './reducers/layoutSlice'
+import viewHistoryReducer from './reducers/viewHistorySlice'
 
 const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ const store = configureStore({
     navbar: navbarReducer,
     cart: cartReducer,
     layout: layoutReducer,
+    viewHistory: viewHistoryReducer,
   },
 })
 
