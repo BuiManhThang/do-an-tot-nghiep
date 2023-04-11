@@ -1,0 +1,5 @@
+fastapi
+bson
+pymongo
+pandas
+mlxtend
