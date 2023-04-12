@@ -15,7 +15,7 @@ export default class AssociationRuleController extends BaseController {
 
   getPaging = async (req: Request, res: Response) => {
     try {
-      const { pageIndex, pageSize, sort, direction, searchText } = req.query as PagingParam
+      const { pageIndex, pageSize, sort, direction } = req.query as PagingParam
       let skip = undefined
       let take = undefined
       let where = undefined
@@ -49,6 +49,7 @@ export default class AssociationRuleController extends BaseController {
             productAntecedents: {
               select: {
                 id: true,
+                code: true,
                 name: true,
                 image: true,
                 price: true,
@@ -58,6 +59,7 @@ export default class AssociationRuleController extends BaseController {
             productConsequents: {
               select: {
                 id: true,
+                code: true,
                 name: true,
                 image: true,
                 price: true,

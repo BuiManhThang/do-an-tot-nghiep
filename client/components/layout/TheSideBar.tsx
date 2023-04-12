@@ -39,12 +39,15 @@ const SIDE_BAR_LINKS: SideBarLink[] = [
     icon: <i className="fa-solid fa-comments"></i>,
     url: '/admin/reviews',
   },
+  {
+    text: 'Hệ thống gợi ý',
+    icon: <i className="fa-solid fa-database"></i>,
+    url: '/admin/recommend-system',
+  },
 ]
 
 const TheSideBar = () => {
   const router = useRouter()
-
-  console.log(router.pathname)
 
   return (
     <div className="w-[200px] h-full bg-white shadow-custom">

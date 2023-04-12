@@ -421,33 +421,6 @@ const AdminOrdersPage = () => {
         orderId={editEntityId}
         onClose={closePopupDetail}
       />
-
-      {/* <PopupAddCategory
-        isActive={isActivePopupAddCategory}
-        categoryId={editCategoryId}
-        onClose={closePopupAddCategory}
-        onSave={handleSaveCategory}
-      />
-
-      <MyPopupConfirm
-        isActive={isActiveConfigm}
-        isLoading={isLoadingDelete}
-        onClose={closePopupConfirm}
-        onAgree={handleDelete}
-      >
-        {deleteCategories.length > 1 ? (
-          <div>
-            <span>{`Xác nhận xóa ${deleteCategories.length} danh mục`}</span>
-          </div>
-        ) : deleteCategories.length > 0 ? (
-          <div>
-            <span>{`Xác nhận xóa danh mục với mã `}</span>
-            <span className="font-medium">{deleteCategories[0].code}</span>
-          </div>
-        ) : (
-          <div></div>
-        )}
-      </MyPopupConfirm> */}
     </div>
   )
 }
