@@ -46,7 +46,12 @@ const TheLayout = ({ children }: Props) => {
     return <div>Loading...</div>
   }
 
-  if (router.pathname === '/sign-in' || router.pathname === '/register') {
+  if (
+    router.pathname === '/sign-in' ||
+    router.pathname === '/register' ||
+    router.pathname === '/forgot-password' ||
+    router.pathname === '/reset-password'
+  ) {
     return (
       <div className="w-full h-screen bg-blue-100 flex items-center justify-center relative">
         <div className="absolute top-0 left-0 w-full h-full">
@@ -57,6 +62,7 @@ const TheLayout = ({ children }: Props) => {
           />
         </div>
         {children}
+        <MyToastMsg />
       </div>
     )
   }

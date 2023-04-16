@@ -1,8 +1,14 @@
 import { PrismaClient } from '@prisma/client'
 import { Request, Response } from 'express'
 import { BaseController } from './baseController'
-import { Category } from '../models/entity'
-import { CreateCategoryDto, PagingParam, PagingResult, UpdateCategoryDto } from '../models/dto'
+import { Category, ValidateError } from '../models/entity'
+import {
+  CreateCategoryDto,
+  PagingParam,
+  PagingResult,
+  UpdateCategoryDto,
+  WhereParam,
+} from '../models/dto'
 
 export default class CategoryController extends BaseController {
   private readonly prisma: PrismaClient
@@ -60,6 +66,23 @@ export default class CategoryController extends BaseController {
         return this.notFound(res)
       }
 
+      const product = await this.prisma.product.findFirst({
+        where: {
+          categoryId: id,
+        },
+      })
+
+      if (product) {
+        const errors: ValidateError[] = [
+          {
+            field: 'product',
+            msg: 'Không thể xóa doanh mục đã có sản phẩm',
+            value: product,
+          },
+        ]
+        return this.clientError(res, errors)
+      }
+
       const deletedModel = await this.model.delete({
         where: {
           id,
@@ -102,7 +125,7 @@ export default class CategoryController extends BaseController {
       const { pageIndex, pageSize, sort, direction, searchText } = req.query as PagingParam
       let skip = undefined
       let take = undefined
-      let where = undefined
+      let where: WhereParam = {}
       let orderBy = undefined
 
       // Paging
@@ -121,10 +144,11 @@ export default class CategoryController extends BaseController {
       }
 
       // Filter
-      if (searchText) {
-        where = {
-          OR: [{ code: { contains: searchText } }, { name: { contains: searchText } }],
-        }
+      if (searchText !== undefined) {
+        where.OR = [
+          { code: { contains: searchText, mode: 'insensitive' } },
+          { name: { contains: searchText, mode: 'insensitive' } },
+        ]
       }
 
       const [entities, entitiesCount] = await Promise.all([

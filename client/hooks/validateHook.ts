@@ -56,7 +56,6 @@ const validateElement = (data: any, validator: Validator): string => {
           break
         }
         const customMsg = custom(dataControl, field, name, rules)
-        console.log(customMsg)
         if (customMsg) {
           return customMsg
         }
@@ -88,7 +87,6 @@ export const useValidate = (validators: Validator[]) => {
         isValid = false
       }
     }
-    console.log(validateResult)
     setError(validateResult)
     return isValid
   }

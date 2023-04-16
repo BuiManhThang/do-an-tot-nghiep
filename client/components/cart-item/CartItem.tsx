@@ -60,7 +60,13 @@ const CartItem = ({ columns, isView = false, itemData }: Props) => {
             <div>
               <Link
                 href={`/products/${itemData.id}`}
-                className="font-bold hover:text-primary transition-colors"
+                title={itemData.name}
+                className="font-bold hover:text-primary transition-colors overflow-hidden"
+                style={{
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  display: '-webkit-box',
+                }}
               >
                 {itemData.name}
               </Link>
@@ -85,11 +91,14 @@ const CartItem = ({ columns, isView = false, itemData }: Props) => {
                   id={`counter-${itemData.id}`}
                   name={`counter-${itemData.id}`}
                   min={1}
+                  max={itemData.amountInSystem}
                   value={itemData.amount}
                   onChange={handleChangeCounter}
                 />
               )}
             </div>
+          ) : index === 4 ? (
+            <div>{itemData.amountInSystem}</div>
           ) : (
             <div
               title="Xóa"

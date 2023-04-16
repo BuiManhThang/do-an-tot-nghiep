@@ -3,7 +3,7 @@ import { Request, Response } from 'express'
 import { BaseController } from './baseController'
 import { sign, Secret } from 'jsonwebtoken'
 import { genSalt, hash, compare } from 'bcrypt'
-import { User, ValidateError } from '../models/entity'
+import { ResetPasswordBody, User, ValidateError } from '../models/entity'
 import { validateEmail, validatePassword, validateRequire } from '../common/validate'
 import {
   RegisterDto,
@@ -13,7 +13,9 @@ import {
   UpdateUserDto,
   PagingParam,
   PagingResult,
+  WhereParam,
 } from '../models/dto'
+import { sendMail } from '../common/mailService'
 
 export default class UserController extends BaseController {
   private readonly prisma: PrismaClient
@@ -341,7 +343,7 @@ export default class UserController extends BaseController {
       const { pageIndex, pageSize, sort, direction, searchText } = req.query as PagingParam
       let skip = undefined
       let take = undefined
-      let where = undefined
+      let where: WhereParam = {}
       let orderBy = undefined
 
       // Paging
@@ -363,10 +365,10 @@ export default class UserController extends BaseController {
       if (searchText) {
         where = {
           OR: [
-            { code: { contains: searchText } },
-            { name: { contains: searchText } },
-            { email: { contains: searchText } },
-            { phoneNumber: { contains: searchText } },
+            { code: { contains: searchText, mode: 'insensitive' } },
+            { name: { contains: searchText, mode: 'insensitive' } },
+            { email: { contains: searchText, mode: 'insensitive' } },
+            { phoneNumber: { contains: searchText, mode: 'insensitive' } },
           ],
         }
       }
@@ -398,7 +400,7 @@ export default class UserController extends BaseController {
 
   getCurrentUser = async (req: Request, res: Response) => {
     try {
-      const id: string = req.body.userId
+      const id: string = req.body.userIdFromToken
       const model = await this.model.findFirst({
         select: {
           id: true,
@@ -447,6 +449,115 @@ export default class UserController extends BaseController {
     }
   }
 
+  resetPassword = async (req: Request, res: Response) => {
+    try {
+      const validateErrors: ValidateError[] = []
+      const { email, password, confirmPassword } = req.body as RegisterDto
+
+      if (!validateRequire(password)) {
+        validateErrors.push({
+          field: 'password',
+          value: password,
+          msg: 'Mật khẩu không được để trống',
+        })
+      }
+      if (!validateRequire(confirmPassword)) {
+        validateErrors.push({
+          field: 'confirmPassword',
+          value: confirmPassword,
+          msg: 'Xác nhận mật khẩu không được để trống',
+        })
+      }
+      if (validateErrors.length > 0) {
+        return this.clientError(res, validateErrors)
+      }
+
+      if (!validatePassword(password)) {
+        validateErrors.push({
+          field: 'password',
+          value: password,
+          msg: 'Mật khẩu cần từ 8 đến 32 ký tự bao gồm chữ, số, chữ in hoa',
+        })
+      }
+      if (validateErrors.length > 0) {
+        return this.clientError(res, validateErrors)
+      }
+
+      if (password !== confirmPassword) {
+        validateErrors.push({
+          field: 'confirmPassword',
+          value: confirmPassword,
+          msg: 'Xác nhận mật khẩu không trùng với mật khẩu',
+        })
+        return this.clientError(res, validateErrors)
+      }
+
+      const user = await this.model.findFirst({
+        where: {
+          email: email,
+        },
+      })
+
+      if (!user) return this.notFound(res)
+
+      const salt = await genSalt(10)
+      const encodedPassword = await hash(password, salt)
+
+      const updatedUser = await this.model.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          password: encodedPassword,
+        },
+      })
+
+      const userInfo: UserDto = {
+        id: updatedUser.id,
+        code: updatedUser.code,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phoneNumber: updatedUser.phoneNumber,
+        isAdmin: updatedUser.isAdmin,
+        avatar: updatedUser.avatar,
+        address: updatedUser.address,
+        cart: updatedUser.cart,
+        createdAt: updatedUser.createdAt,
+        updatedAt: updatedUser.updatedAt,
+      }
+
+      return this.success(res, userInfo)
+    } catch (error) {
+      return this.serverError(res, error)
+    }
+  }
+
+  sendMailResetPassword = async (req: Request, res: Response) => {
+    try {
+      const resetPasswordBody: ResetPasswordBody = req.body
+
+      const user = await this.model.findFirst({
+        where: {
+          email: resetPasswordBody.email,
+        },
+      })
+
+      if (!user) {
+        return this.notFound(res)
+      }
+
+      const token = this.setJwtTokenForResetPassword(resetPasswordBody.email)
+      const htmlString = `
+        <h1>Đặt lại mật khẩu</h1>
+        <p>Bấm vào <a href="${process.env.CLIENT_URL}/reset-password?token=${token}">đây</a> để đặt lại mật khẩu</p>
+      `
+      sendMail(resetPasswordBody.email, 'Đặt lại mật khẩu', htmlString)
+      return this.success(res, true)
+    } catch (error) {
+      return this.serverError(res, error)
+    }
+  }
+
   getNewCode = async (_: Request, res: Response) => {
     try {
       const newCode = await this.genereateNewCode()
@@ -480,6 +591,15 @@ export default class UserController extends BaseController {
     const secretKey: Secret = process.env.JWT_SECRET_KEY || ''
     const token = sign({ userId, isAdmin }, secretKey, {
       expiresIn: '1d',
+    })
+
+    return token
+  }
+
+  private setJwtTokenForResetPassword = (email: string) => {
+    const secretKey: Secret = process.env.JWT_SECRET_KEY || ''
+    const token = sign({ email }, secretKey, {
+      expiresIn: '10m',
     })
 
     return token

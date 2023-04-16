@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import UserController from '../controllers/userController'
-import { authorize, authorizeAdmin } from '../common/authorize'
+import { authorize, authorizeAdmin, authorizeResetPassword } from '../common/authorize'
 
 const userController = new UserController()
 const userRouter = Router()
@@ -14,6 +14,8 @@ userRouter.get('/', authorizeAdmin, userController.getAll)
 userRouter.post('/register', userController.register)
 userRouter.post('/sign-in', userController.signIn)
 userRouter.post('/sign-out', userController.signOut)
+userRouter.post('/mail-reset-password', userController.sendMailResetPassword)
+userRouter.post('/reset-password', authorizeResetPassword, userController.resetPassword)
 userRouter.post('/', authorizeAdmin, userController.create)
 
 userRouter.put('/:id', userController.update)

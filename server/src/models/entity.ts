@@ -7,8 +7,9 @@ export type ValidateError = {
 }
 
 export type DecodedData = {
-  userId: string
-  isAdmin: boolean
+  userId?: string
+  isAdmin?: boolean
+  email?: string
 }
 
 export type User = {
@@ -139,4 +140,8 @@ export type ProductInOrder = {
   unit: string
   categoryId: string
   categoryName: string
+}
+
+export type ResetPasswordBody = {
+  email: string
 }

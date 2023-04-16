@@ -20,8 +20,8 @@ class BaseApi {
     })
   }
 
-  post = async (url: string, data: any) => {
-    const token = localStorage.getItem('token')
+  post = async (url: string, data: any, customToken?: string) => {
+    const token = customToken ? customToken : localStorage.getItem('token')
     return this.httpClient.post(url, data, {
       headers: {
         Authorization: token ? `Bearer ${token}` : undefined,

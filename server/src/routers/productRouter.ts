@@ -7,6 +7,7 @@ const productRouter = Router()
 
 productRouter.get('/paging', productController.getPaging)
 productRouter.get('/new-code', authorizeAdmin, productController.getNewCode)
+productRouter.get('/ids/:ids', productController.getProductsByIds)
 productRouter.get('/:id', productController.getById)
 productRouter.get('/', authorizeAdmin, productController.getAll)
 

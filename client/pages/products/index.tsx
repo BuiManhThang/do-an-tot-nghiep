@@ -58,6 +58,7 @@ const getPagingFunc = async (param: SearchParams): Promise<PagingResult> => {
     categoryId:
       param.categoryId && !param.categoryId.includes('all') ? param.categoryId : undefined,
     searchText: param.searchText ? param.searchText : undefined,
+    isActive: true,
   }
   const res = await baseApi.get('products/paging', formattedSearchParam)
   const pagingResult: PagingResult = res.data
@@ -97,9 +98,10 @@ const ProductsPage = () => {
       setIsLoadingProducts(true)
       setIsLoadingCategories(true)
       const selectedCategoryId: string = router.query.categoryId?.toString() || 'all'
+      const searchText: string = router.query.searchText?.toString() || ''
       try {
         setSearchParam({
-          searchText: '',
+          searchText: searchText,
           categoryId: selectedCategoryId,
           sort: 'createdAt',
           direction: 'desc',
@@ -108,7 +110,7 @@ const ProductsPage = () => {
         })
         const [pagingProductResult, categoriesResult] = await Promise.all([
           getPagingFunc({
-            searchText: '',
+            searchText: searchText,
             categoryId: selectedCategoryId,
             sort: 'createdAt',
             direction: 'desc',
@@ -142,7 +144,7 @@ const ProductsPage = () => {
     }
 
     getPagingInit()
-  }, [router.query.categoryId])
+  }, [router.query.categoryId, router.query.searchText])
 
   const getPaging = async (param: SearchParams) => {
     setIsLoadingProducts(true)

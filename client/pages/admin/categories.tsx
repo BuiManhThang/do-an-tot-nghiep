@@ -12,6 +12,7 @@ import MyPopupConfirm from '@/components/my-popup/MyPopupConfirm'
 import { useToastMsg } from '@/hooks/toastMsgHook'
 import { ToastMsgType } from '@/enum/toastMsg'
 import PopupAddCategory from '@/components/popup/PopupAddCategory'
+import { handleClientError } from '@/common/errorHandler'
 
 const ORDER_BY_OPTIONS: MySelectOption[] = [
   {
@@ -255,11 +256,16 @@ const AdminCategoriesPage = () => {
         type: ToastMsgType.Success,
       })
     } catch (error) {
-      console.log(error)
+      let msg = 'Xóa thất bại'
+      const errorResult = handleClientError(error)
+      if (errorResult.product) {
+        msg = errorResult.product
+      }
       openToast({
-        msg: 'Xóa thất bại',
+        msg,
         type: ToastMsgType.Danger,
       })
+      console.log(error)
     } finally {
       setIsLoadingDelete(false)
       closePopupConfirm()

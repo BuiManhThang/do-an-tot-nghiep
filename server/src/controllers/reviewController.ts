@@ -134,15 +134,18 @@ export default class ReviewController extends BaseController {
           {
             user: {
               OR: [
-                { code: { contains: searchText } },
-                { name: { contains: searchText } },
-                { email: { contains: searchText } },
+                { code: { contains: searchText, mode: 'insensitive' } },
+                { name: { contains: searchText, mode: 'insensitive' } },
+                { email: { contains: searchText, mode: 'insensitive' } },
               ],
             },
           },
           {
             product: {
-              OR: [{ code: { contains: searchText } }, { name: { contains: searchText } }],
+              OR: [
+                { code: { contains: searchText, mode: 'insensitive' } },
+                { name: { contains: searchText, mode: 'insensitive' } },
+              ],
             },
           },
         ]

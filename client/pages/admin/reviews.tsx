@@ -4,6 +4,7 @@ import MyPopupConfirm from '@/components/my-popup/MyPopupConfirm'
 import MySelect, { MySelectOption } from '@/components/my-select/MySelect'
 import MyTable, { Column, TableAlign, TableDataType } from '@/components/my-table/MyTable'
 import MyTextField from '@/components/my-text-field/MyTextField'
+import PopupWatchReview from '@/components/popup-watch-review/PopupWatchReview'
 import { ToastMsgType } from '@/enum/toastMsg'
 import { useToastMsg } from '@/hooks/toastMsgHook'
 import { PagingResult } from '@/types/paging'
@@ -177,11 +178,11 @@ const AdminReviewsPage = () => {
   const { openToast } = useToastMsg()
   const [isActiveConfigm, setIsActiveConfirm] = useState<boolean>(false)
   const [isLoadingDelete, setIsLoadingDelete] = useState<boolean>(false)
-  const [editEntityId, setEditEntityId] = useState<string>('')
-  const [isActivePopupAdd, setIsActivePopupAdd] = useState(false)
   const [deleteEntities, setDeleteEntities] = useState<Review[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [entities, setEntities] = useState<Review[]>([])
+  const [isActivePopupWatchReview, setIsActivePopupWatchReview] = useState(false)
+  const [selectedReview, setSelectedReview] = useState<Review>()
   const [totalRecords, setTotalRecords] = useState<number>(0)
   const [searchParams, setSearchParams] = useState<SearchParams>({
     searchText: '',
@@ -284,34 +285,17 @@ const AdminReviewsPage = () => {
     getPaging(newSearchParams)
   }
 
-  const openPopupAdd = (entityId?: string) => {
-    if (entityId) {
-      setEditEntityId(entityId)
-    } else {
-      setEditEntityId('')
-    }
-    setIsActivePopupAdd(true)
-  }
-
-  const closePopupAdd = () => {
-    setIsActivePopupAdd(false)
-  }
-
-  const handleSaveEntity = () => {
-    closePopupAdd()
-    getPaging(searchParams)
-  }
-
-  const handleClickEdit = (e: Review) => {
-    openPopupAdd(e.id)
-  }
-
   const openPopupConfirm = () => {
     setIsActiveConfirm(true)
   }
 
   const closePopupConfirm = () => {
     setIsActiveConfirm(false)
+  }
+
+  const handleClickWatch = (selectedEntity: Review) => {
+    setSelectedReview(selectedEntity)
+    setIsActivePopupWatchReview(true)
   }
 
   const handleClickDelete = (deleteEntity: Review) => {
@@ -405,12 +389,12 @@ const AdminReviewsPage = () => {
           haveRowIndex={true}
           selectedRows={[]}
           editIcon={
-            <i className="fa-solid fa-pen-to-square text-lg leading-none text-gray-700 cursor-pointer transition-colors hover:text-primary"></i>
+            <i className="fa-solid fa-eye text-lg leading-none text-gray-700 cursor-pointer transition-colors hover:text-primary"></i>
           }
           deleteIcon={
             <i className="fa-solid fa-trash ext-lg text-gray-700 leading-none cursor-pointer transition-colors hover:text-red-600"></i>
           }
-          onEdit={handleClickEdit}
+          onEdit={handleClickWatch}
           onDelete={handleClickDelete}
         />
       </div>
@@ -424,13 +408,6 @@ const AdminReviewsPage = () => {
           onChangePageSize={handleChangePageSize}
         />
       </div>
-
-      {/* <PopupAddCategory
-        isActive={isActivePopupAdd}
-        categoryId={editEntityId}
-        onClose={closePopupAdd}
-        onSave={handleSaveEntity}
-      /> */}
 
       <MyPopupConfirm
         isActive={isActiveConfigm}
@@ -451,6 +428,12 @@ const AdminReviewsPage = () => {
           <div></div>
         )}
       </MyPopupConfirm>
+
+      <PopupWatchReview
+        isActive={isActivePopupWatchReview}
+        reviewDetail={selectedReview}
+        onClose={() => setIsActivePopupWatchReview(false)}
+      />
     </div>
   )
 }

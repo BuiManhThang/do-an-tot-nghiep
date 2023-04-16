@@ -20,6 +20,8 @@ import { ToastMsgType } from '@/enum/toastMsg'
 import baseApi from '@/apis/baseApi'
 import { removeCart } from '@/store/reducers/cartSlice'
 import { setUserInfo } from '@/store/reducers/userSlice'
+import { Product } from '@/types/product'
+import { ProductInCart } from '@/types/user'
 
 export type Header = {
   text: string
@@ -48,6 +50,11 @@ const HEADERS: Header[] = [
     minWidth: 150,
   },
   {
+    text: 'Kho',
+    width: 80,
+    minWidth: 80,
+  },
+  {
     text: '',
     width: 46,
     minWidth: 46,
@@ -60,6 +67,7 @@ const Cart = () => {
   const userInfo = useAppSelector((state) => state.user.userInfo)
   const products = useAppSelector((state) => state.cart.products)
   const { openToast } = useToastMsg()
+  const [productsWithAmount, setProductsWithAmount] = useState<ProductInCart[]>([])
   const [isActivePopupConfigm, setIsActivePopupConfigm] = useState(false)
   const [isLoadingSave, setIsLoadingSave] = useState(false)
   const [isActivePopupInfo, setIsActivePopupInfo] = useState(false)
@@ -87,6 +95,40 @@ const Cart = () => {
     setTotalPrice(totalPriceTmp)
   }, [products])
 
+  useEffect(() => {
+    const getProductsByIds = async () => {
+      try {
+        const productIds = products.map((p) => p.id)
+        const productIdsString = productIds.join(';')
+        const res = await baseApi.get(`products/ids/${productIdsString}`)
+        const resData: Product[] = res.data
+        const productsWithAmountRes: ProductInCart[] = products.map((product) => {
+          return {
+            ...product,
+            amountInSystem: resData.find((p) => p.id === product.id)?.amount || 0,
+          }
+        })
+        setProductsWithAmount(productsWithAmountRes)
+      } catch (error) {
+        console.log(error)
+        setProductsWithAmount(products.map((p) => ({ ...p, amountInSystem: 0 })))
+      }
+    }
+
+    if (products.length && !productsWithAmount.length) {
+      getProductsByIds()
+    } else {
+      const productsWithAmountRes: ProductInCart[] = products.map((product) => {
+        return {
+          ...product,
+          amountInSystem: productsWithAmount.find((p) => p.id === product.id)?.amountInSystem || 0,
+        }
+      })
+      setProductsWithAmount(productsWithAmountRes)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products])
+
   const handleClickContinueBuy = () => {
     router.push('/')
   }
@@ -100,6 +142,11 @@ const Cart = () => {
     if (!userInfo) {
       setIsActivePopupInfo(true)
       setMsgPopupInfo('Bạn cần đăng nhập trước khi đặt hàng')
+      return
+    }
+    if (productsWithAmount.some((p) => p.amount > p.amountInSystem)) {
+      setIsActivePopupInfo(true)
+      setMsgPopupInfo('Sản phẩm vượt quá số lượng trong kho')
       return
     }
     if (
@@ -196,7 +243,7 @@ const Cart = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {products.map((product) => (
+                    {productsWithAmount.map((product) => (
                       <CartItem columns={HEADERS} itemData={product} key={product.id} />
                     ))}
                   </tbody>

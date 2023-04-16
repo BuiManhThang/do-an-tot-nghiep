@@ -4,7 +4,7 @@ import MySlider from '@/components/my-slider/MySlider'
 import ProductCardList from '@/components/product-card-list/ProductCardList'
 import ProductCard from '@/components/product-card/ProductCard'
 import Image from 'next/image'
-import { CardProduct, Product } from '@/types/product'
+import { Product } from '@/types/product'
 
 import Image1 from '../assets/images/test/1.jpg'
 import Image2 from '../assets/images/test/2.jpg'
@@ -81,6 +81,7 @@ const getPagingProducts = async (categoryId: string): Promise<Product[]> => {
     pageSize: 8,
     sort: 'code',
     direction: 'desc',
+    isActive: true,
   })
   const pagingResult: PagingResult = res.data
   const products: Product[] = pagingResult.data
@@ -220,7 +221,7 @@ export default function Home() {
           </div>
 
           <div className="mt-8">
-            <h2 className="text-center font-bold text-3xl mb-6">Sản phẩm để xuất</h2>
+            <h2 className="text-center font-bold text-3xl mb-6">Sản phẩm đề xuất</h2>
             {isLoadingSuggestion ? (
               <>
                 <ProductCardList>

@@ -8,17 +8,30 @@ import { ToastMsgType } from '@/enum/toastMsg'
 import MyPopup from '../my-popup/MyPopup'
 import MyButton, { MyButtonType } from '../my-button/MyButton'
 import MyTextField from '../my-text-field/MyTextField'
+import axios from 'axios'
 
 const VALIDATORS: Validator[] = [
   {
     field: 'min_support',
     name: 'Điểm hỗ trợ tối thiểu',
-    rules: [ValidateRule.Required],
+    rules: [ValidateRule.Required, ValidateRule.Custom],
+    custom: (value, field, name, rules) => {
+      if (value < 0.02 || value > 1) {
+        return `${name} phải >= 0.02 và <= 1`
+      }
+      return ''
+    },
   },
   {
     field: 'min_confidence',
     name: 'Điểm tin cậy tối thiểu',
-    rules: [ValidateRule.Required],
+    rules: [ValidateRule.Required, ValidateRule.Custom],
+    custom: (value, field, name, rules) => {
+      if (value < 0.02 || value > 1) {
+        return `${name} phải >= 0.02 và <= 1`
+      }
+      return ''
+    },
   },
 ]
 
@@ -31,7 +44,7 @@ type Props = {
 const PopupGenerateAssociationRule = ({ isActive = false, onClose, onSave }: Props) => {
   const inputSupportRef = useRef<HTMLInputElement>(null)
   const { openToast } = useToastMsg()
-  const { error, isValidated, validate, setIsValidated } = useValidate(VALIDATORS)
+  const { error, isValidated, validate, setIsValidated, setError } = useValidate(VALIDATORS)
   const [isActiveConfigm, setIsActiveConfirm] = useState(false)
   const [isLoadingSave, setIsLoadingSave] = useState(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -62,8 +75,9 @@ const PopupGenerateAssociationRule = ({ isActive = false, onClose, onSave }: Pro
       min_confidence: 0.02,
       min_support: 0.02,
     })
+    setError({})
     setIsValidated(false)
-  }, [isActive, setIsValidated])
+  }, [isActive, setError, setIsValidated])
 
   const handleChange = (func: (prev: CreateAssociationRule) => CreateAssociationRule) => {
     return setAssociationRuleData((prev) => {
@@ -95,14 +109,23 @@ const PopupGenerateAssociationRule = ({ isActive = false, onClose, onSave }: Pro
     setIsLoadingSave(true)
     let isSuccess = false
     try {
-      await baseApi.post('/categories', {
-        ...associationRuleData,
+      const res = await axios.post('http://127.0.0.1:8000/api/v1/recommend-service', {
+        min_support: associationRuleData.min_support,
+        min_confidence: associationRuleData.min_confidence,
       })
-      openToast({
-        msg: `Sinh luật kết hơp thành công`,
-        type: ToastMsgType.Success,
-      })
-      isSuccess = true
+      if (res.data === false) {
+        isSuccess = false
+        openToast({
+          msg: `Không sinh được luật kết hợp nào`,
+          type: ToastMsgType.Danger,
+        })
+      } else {
+        openToast({
+          msg: `Sinh luật kết hơp thành công`,
+          type: ToastMsgType.Success,
+        })
+        isSuccess = true
+      }
     } catch (error) {
       console.log(error)
       openToast({
@@ -155,8 +178,12 @@ const PopupGenerateAssociationRule = ({ isActive = false, onClose, onSave }: Pro
                 name="min_support"
                 label="Điểm hỗ trợ tối thiểu"
                 required={true}
+                type="number"
+                min={0.02}
+                max={1}
+                step={0.01}
                 value={associationRuleData.min_support}
-                error={error.min_confidence}
+                error={error.min_support}
                 isParentLoading={isLoading}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   handleChange((prev) => ({
@@ -173,6 +200,10 @@ const PopupGenerateAssociationRule = ({ isActive = false, onClose, onSave }: Pro
                 name="min_confidence"
                 label="Điểm tin cậy tối thiểu"
                 required={true}
+                type="number"
+                min={0.02}
+                max={1}
+                step={0.01}
                 isParentLoading={isLoading}
                 value={associationRuleData.min_confidence}
                 error={error.min_confidence}

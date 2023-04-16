@@ -20,7 +20,7 @@ from config import Settings
 app = FastAPI()
 
 origins = [
-  "http://localhost:8080",
+  "http://localhost:3000",
 ]
 
 app.add_middleware(
@@ -82,9 +82,11 @@ def insert_association_rules(association_rule_collection, association_rules):
       'lift': rule.lift
     }
     records.append(record)
-
+  if len(records) == 0:
+    return False
   association_rule_collection.delete_many({})
   association_rule_collection.insert_many(records)
+  return True
 
 
 @app.post("/api/v1/recommend-service", status_code=status.HTTP_201_CREATED)
@@ -103,7 +105,7 @@ def create_association_rules(params: CreateAssociationRuleParams, settings: Anno
   association_rules = generate_association_rules(transactions=transactions, min_support=params.min_support, min_confidence=params.min_confidence)
 
   # Lưu luật kết hợp và database
-  insert_association_rules(association_rule_collection=association_rule_collection, association_rules=association_rules)
+  result = insert_association_rules(association_rule_collection=association_rule_collection, association_rules=association_rules)
 
-  return True
+  return result
 

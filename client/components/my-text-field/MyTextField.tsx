@@ -22,8 +22,10 @@ type MyTextFieldProps = {
   isParentLoading?: boolean
   min?: number
   max?: number
+  step?: number
   thousandsSeparator?: string
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
   onClickStartIcon?: (e: React.MouseEvent<HTMLDivElement>) => void
   onClickEndIcon?: (e: React.MouseEvent<HTMLDivElement>) => void
 }
@@ -47,8 +49,10 @@ const MyTextField = ({
   inputRef,
   min,
   max,
+  step = 1,
   thousandsSeparator = '.',
   onChange,
+  onKeyDown,
   onClickStartIcon,
   onClickEndIcon,
 }: MyTextFieldProps) => {
@@ -106,6 +110,10 @@ const MyTextField = ({
     }
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (typeof onKeyDown === 'function') onKeyDown(e)
+  }
+
   return (
     <div ref={containerRef} className={`flex flex-col w-full ${className}`}>
       {label && (
@@ -131,7 +139,11 @@ const MyTextField = ({
           placeholder={placeholder}
           style={inputStyle}
           disabled={disabled}
+          step={step}
+          min={min}
+          max={max}
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
         />
         {endIcon && (
           <div

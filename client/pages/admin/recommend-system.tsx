@@ -291,7 +291,7 @@ const AdminRecommendSystemPage = () => {
   }
 
   const handleSaveEntity = () => {
-    closePopupDetail()
+    closePopupGenerate()
     getPaging(searchParams)
   }
 
@@ -373,7 +373,11 @@ const AdminRecommendSystemPage = () => {
         onClose={closePopupDetail}
       />
 
-      <PopupGenerateAssociationRule isActive={isActivePopupGenerate} onClose={closePopupGenerate} />
+      <PopupGenerateAssociationRule
+        isActive={isActivePopupGenerate}
+        onClose={closePopupGenerate}
+        onSave={handleSaveEntity}
+      />
     </div>
   )
 }

@@ -4,7 +4,6 @@ import { User } from '@/types/user'
 import React, { useEffect, useRef, useState } from 'react'
 import MyPopupConfirm from '../my-popup/MyPopupConfirm'
 import { useToastMsg } from '@/hooks/toastMsgHook'
-import { MySelectOption } from '../my-select/MySelect'
 import { ToastMsgType } from '@/enum/toastMsg'
 import MyPopup from '../my-popup/MyPopup'
 import MyButton, { MyButtonType } from '../my-button/MyButton'
@@ -78,6 +77,7 @@ const PopupUserDetail = ({ isActive = false, entityId, onClose, onSave }: Props)
     },
     cart: [],
     orders: [],
+    viewHistorys: [],
     createdAt: new Date(),
     updatedAt: new Date(),
   })
@@ -127,6 +127,7 @@ const PopupUserDetail = ({ isActive = false, entityId, onClose, onSave }: Props)
                 },
             cart: [],
             orders: [],
+            viewHistorys: [],
             createdAt: new Date(),
             updatedAt: new Date(),
           })
@@ -145,10 +146,27 @@ const PopupUserDetail = ({ isActive = false, entityId, onClose, onSave }: Props)
       setReviewsCount(0)
       try {
         const newCodeRes = await getNewCode()
-        setEntityData((prev) => ({
-          ...prev,
+        setEntityData({
+          id: '',
           code: newCodeRes,
-        }))
+          email: '',
+          password: '',
+          name: '',
+          phoneNumber: '',
+          avatar:
+            'https://firebasestorage.googleapis.com/v0/b/do-an-tot-nghiep-16a34.appspot.com/o/images%2Fsystem%2Fdefault-avatar.jpg?alt=media&token=aa3b94e4-84ce-49c5-9631-f5e60db102fa',
+          isAdmin: false,
+          address: {
+            city: '',
+            district: '',
+            detail: '',
+          },
+          cart: [],
+          orders: [],
+          viewHistorys: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
         setTimeout(() => {
           emailInputRef.current?.focus()
         }, 10)
@@ -180,6 +198,7 @@ const PopupUserDetail = ({ isActive = false, entityId, onClose, onSave }: Props)
       },
       cart: [],
       orders: [],
+      viewHistorys: [],
       createdAt: new Date(),
       updatedAt: new Date(),
     })

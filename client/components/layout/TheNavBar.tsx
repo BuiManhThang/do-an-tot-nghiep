@@ -6,6 +6,7 @@ import { signOut } from '@/store/reducers/userSlice'
 import { useRouter } from 'next/router'
 import MyPopover from '../my-popover/MyPopover'
 import { getCategories } from '@/store/reducers/navbarSlice'
+import PopupSearch from '../popup-search/PopupSearch'
 
 type NavBarLink = {
   text: string
@@ -30,6 +31,7 @@ const TheNavBar = () => {
   const categories = useAppSelector((state) => state.navbar.categories)
   const userInfo = useAppSelector((state) => state.user.userInfo)
   const [isActive, setIsActive] = useState(false)
+  const [isActivePopupSearch, setIsActivePopupSearch] = useState(false)
   const [totalProductsInCart, setTotalProductsInCart] = useState(0)
   const [navbarLinks, setNavbarLinks] = useState<NavBarLink[]>([
     {
@@ -151,7 +153,10 @@ const TheNavBar = () => {
         <div className="flex items-center gap-x-4 justify-self-end">
           {!isInAdminPage && (
             <>
-              <div className="w-8 h-8 flex items-center justify-center cursor-pointer text-xl hover:text-primary transition-colors">
+              <div
+                className="w-8 h-8 flex items-center justify-center cursor-pointer text-xl hover:text-primary transition-colors"
+                onClick={() => setIsActivePopupSearch(true)}
+              >
                 <i className="fa-solid fa-magnifying-glass"></i>
               </div>
               <Link
@@ -286,6 +291,8 @@ const TheNavBar = () => {
           </ul>
         </div>
       </nav>
+
+      <PopupSearch isActive={isActivePopupSearch} onClose={() => setIsActivePopupSearch(false)} />
     </div>
   )
 }

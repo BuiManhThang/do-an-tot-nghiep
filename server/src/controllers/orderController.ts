@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, ProductInOrder } from '@prisma/client'
 import { Request, Response } from 'express'
 import { BaseController } from './baseController'
-import { Order } from '../models/entity'
+import { Order, ValidateError } from '../models/entity'
 import {
   CreateOrderDto,
   PagingResult,
@@ -10,6 +10,8 @@ import {
   WhereOrderParam,
 } from '../models/dto'
 import { OrderStatus } from '../models/enum'
+import { sendMail } from '../common/mailService'
+import { numberWithCommas } from '../common/format'
 
 export default class OrderController extends BaseController {
   private readonly prisma: PrismaClient
@@ -25,6 +27,31 @@ export default class OrderController extends BaseController {
   create = async (req: Request, res: Response) => {
     try {
       const entity: CreateOrderDto = req.body
+
+      const productIds = entity.products.map((p) => p.id)
+      const products = await this.prisma.product.findMany({
+        where: {
+          id: { in: productIds },
+        },
+      })
+      if (
+        entity.products.some((product) => {
+          const foundProduct = products.find((p) => p.id === product.id)
+          if (!foundProduct) return false
+          if (product.amount > foundProduct.amount) return true
+          return false
+        })
+      ) {
+        const errors: ValidateError[] = [
+          {
+            field: 'product',
+            msg: 'Số lượng sản phẩm vượt quá số lượng trong kho. Tải lại trang để xem số lượng mới nhất',
+            value: null,
+          },
+        ]
+        return this.clientError(res, errors)
+      }
+
       entity.code = await this.genereateNewCode()
       const newEntity = await this.createEntity(entity)
 
@@ -60,7 +87,79 @@ export default class OrderController extends BaseController {
 
       this.setPrevValue(entity, model as Order)
 
+      entity.products = entity.products.map((p) => {
+        return {
+          id: p.id,
+          code: p.code,
+          name: p.name,
+          image: p.image,
+          amount: p.amount,
+          price: p.price,
+          unit: p.unit,
+          categoryId: p.categoryId,
+          categoryName: p.categoryName,
+        }
+      })
+
+      const productIds = model.products.map((p) => p.id)
+      const products = await this.prisma.product.findMany({
+        where: {
+          id: { in: productIds },
+        },
+      })
+      if (
+        model.products.some((product) => {
+          const foundProduct = products.find((p) => p.id === product.id)
+          if (!foundProduct) return false
+          if (product.amount > foundProduct.amount) return true
+          return false
+        })
+      ) {
+        const errors: ValidateError[] = [
+          {
+            field: 'product',
+            msg: 'Số lượng sản phẩm vượt quá số lượng trong kho. Tải lại trang để xem số lượng mới nhất',
+            value: null,
+          },
+        ]
+        return this.clientError(res, errors)
+      }
+
       const updatedEntity = await this.updateEntity(entityId, entity)
+
+      if (updatedEntity.status === OrderStatus.Confirmed) {
+        // Trừ số lượng sản phẩm trong kho
+        const requestList: any[] = []
+        updatedEntity.products.forEach((product) => {
+          requestList.push(
+            this.prisma.product.update({
+              where: {
+                id: product.id,
+              },
+              data: {
+                amount: {
+                  decrement: product.amount,
+                },
+              },
+            })
+          )
+        })
+        await Promise.all(requestList)
+
+        // Gửi email cho người dùng
+        this.sendMailToUser(updatedEntity as Order)
+      }
+
+      // Tạo transaction
+      if (entity.status === OrderStatus.Success) {
+        await this.prisma.transaction.create({
+          data: {
+            orderId: entityId,
+            productIds: updatedEntity.products.map((p) => p.id),
+          },
+        })
+      }
+
       return this.updated(res, updatedEntity)
     } catch (error) {
       return this.serverError(res, error)
@@ -114,7 +213,32 @@ export default class OrderController extends BaseController {
       if (!model) {
         return this.notFound(res)
       }
-      return this.success(res, model)
+
+      if (model.status !== OrderStatus.Pending) return this.success(res, model)
+
+      const productIds = model.products.map((p) => p.id)
+      const products = await this.prisma.product.findMany({
+        where: {
+          id: { in: productIds },
+        },
+      })
+
+      const result = {
+        ...model,
+        products: model.products.map((product) => {
+          let amountInSystem = 0
+          const foundProduct = products.find((p) => p.id === product.id)
+          if (foundProduct) {
+            amountInSystem = foundProduct.amount
+          }
+          return {
+            ...product,
+            amountInSystem,
+          }
+        }),
+      }
+
+      return this.success(res, result)
     } catch (error) {
       return this.serverError(res, error)
     }
@@ -160,9 +284,9 @@ export default class OrderController extends BaseController {
           {
             user: {
               OR: [
-                { code: { contains: searchText } },
-                { name: { contains: searchText } },
-                { email: { contains: searchText } },
+                { code: { contains: searchText, mode: 'insensitive' } },
+                { name: { contains: searchText, mode: 'insensitive' } },
+                { email: { contains: searchText, mode: 'insensitive' } },
               ],
             },
           },
@@ -209,6 +333,105 @@ export default class OrderController extends BaseController {
     }
   }
 
+  private sendMailToUser = async (order: Order) => {
+    try {
+      const htmlString = `
+      <h1>Xác nhận đơn hàng của bạn</h1>
+      <table>
+      <style>
+        table {
+          border: 1px solid #000;
+          width: 600px;
+          border-collapse: separate;
+          border-spacing: 0;
+        }
+        table thead tr th {
+          border-bottom: 1px solid #000;
+          border-right: 1px solid #000;
+          padding: 0 10px;
+        }
+        table tbody tr td {
+          border-bottom: 1px solid #000;
+          border-right: 1px solid #000;
+          padding: 0 10px;
+        }
+        table thead tr th:last-child {
+          border-right: none;
+          text-align: right;
+        }
+        table tbody tr td:last-child {
+          border-right: none;
+          text-align: right;
+        }
+        table tbody tr:last-child td {
+          border-bottom: none;
+        }
+        table tbody tr td:first-child {
+          text-align: center;
+        }
+        table tbody tr td:nth-child(2) {
+          text-align: left;
+        }
+        table thead tr th:nth-child(2) {
+          text-align: left;
+        }
+        table tbody tr td:nth-child(3) {
+          text-align: left;
+        }
+        table thead tr th:nth-child(3) {
+          text-align: left;
+        }
+        table tbody tr td:nth-child(4) {
+          text-align: right;
+        }
+        table thead tr th:nth-child(4) {
+          text-align: right;
+        }
+      </style>
+        <colgroup>
+          <col style="width: 50px;" />
+          <col style="width: 250px;" />
+          <col style="width: 100px;" />
+          <col style="width: 100px;" />
+          <col style="width: 100px;" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Tên sản phẩm</th>
+            <th>Đơn vị</th>
+            <th>Đơn giá</th>
+            <th>Số lượng</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${order.products
+            .map((product, index) => {
+              return `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${product.name}</td>
+                <td>${product.unit}</td>
+                <td>${numberWithCommas(product.price)}</td>
+                <td>${product.amount}</td>
+              </tr>
+              `
+            })
+            .join('')}
+        </tbody>
+      </table>
+      
+      <div style="margin-top: 20px;">
+        <span>Thành tiền: </span>
+        <span style="font-weight: 700;">${numberWithCommas(order.totalMoney)}đ</span>
+      </div>`
+
+      await sendMail(order.user.email, 'Xác nhận đơn hàng', htmlString)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   private genereateNewCode = async () => {
     const entities = await this.model.findMany({
       orderBy: {
@@ -246,6 +469,9 @@ export default class OrderController extends BaseController {
     const updatedEntity = await this.model.update({
       where: {
         id: entityId,
+      },
+      include: {
+        user: true,
       },
       data: {
         code: entity.code,

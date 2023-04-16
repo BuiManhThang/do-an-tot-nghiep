@@ -57,18 +57,31 @@ const PopupOrderDetail = ({
   const [isLoadingCancelOrder, setIsLoadingCancelOrder] = useState(false)
   const [orderDetail, setOrderDetail] = useState<Order>()
   const [numberProducts, setNumberProducts] = useState(0)
+  const [headers, setHeaders] = useState<Header[]>(HEADERS)
 
   useEffect(() => {
     const getOrderDetail = async (orderId: string) => {
       setIsLoading(true)
       try {
-        const res = await baseApi.get(`orders/${orderId}`)
-        const orderDetailRes: Order = res.data
+        const resOrder = await baseApi.get(`orders/${orderId}`)
+        const orderDetailRes: Order = resOrder.data
         const numberProducts = orderDetailRes.products.reduce((prev, cur) => {
           return prev + cur.amount
         }, 0)
         setOrderDetail(orderDetailRes)
         setNumberProducts(numberProducts)
+        if (orderDetailRes.status === OrderStatus.Pending) {
+          setHeaders((prev) => {
+            return [
+              ...prev,
+              {
+                text: 'Kho',
+                width: 80,
+                minWidth: 80,
+              },
+            ]
+          })
+        }
       } catch (err) {
         console.log(err)
       } finally {
@@ -78,6 +91,8 @@ const PopupOrderDetail = ({
 
     if (isActive) {
       getOrderDetail(orderId)
+    } else {
+      setHeaders(HEADERS)
     }
   }, [isActive, orderId])
 
@@ -196,7 +211,7 @@ const PopupOrderDetail = ({
               <table className="w-full border-separate border-spacing-0">
                 <thead>
                   <tr>
-                    {HEADERS.map((header) => (
+                    {headers.map((header) => (
                       <th
                         className="h-14 px-4 text-left border-b border-gray-200 bg-white sticky top-0 z-[1]"
                         key={header.text}
@@ -217,7 +232,7 @@ const PopupOrderDetail = ({
                         key={`${product.id}`}
                         itemData={product}
                         isView={true}
-                        columns={HEADERS}
+                        columns={headers}
                       />
                     )
                   })}

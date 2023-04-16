@@ -30,10 +30,17 @@ type Props = {
   userId?: string
   productId?: string
   isActive?: boolean
+  reviewDetail?: Review
   onClose?: () => void
 }
 
-const PopupWatchReview = ({ isActive = false, userId, productId, onClose }: Props) => {
+const PopupWatchReview = ({
+  isActive = false,
+  userId,
+  productId,
+  reviewDetail,
+  onClose,
+}: Props) => {
   const [pageIndex, setPageIndex] = useState<number>(1)
   const [reviews, setReviews] = useState<Review[]>([])
   const [totalRecords, setTotalRecords] = useState(0)
@@ -56,9 +63,16 @@ const PopupWatchReview = ({ isActive = false, userId, productId, onClose }: Prop
       }
     }
 
-    setPageIndex(1)
-    getReviews()
-  }, [isActive, userId, productId])
+    if (isActive) {
+      setPageIndex(1)
+      if (reviewDetail) {
+        setReviews([reviewDetail])
+        setTotalRecords(1)
+      } else {
+        getReviews()
+      }
+    }
+  }, [isActive, userId, productId, reviewDetail])
 
   const getReviewPaging = async (productId?: string, userId?: string, pageIndex: number = 1) => {
     if (!productId && !userId) return
@@ -87,7 +101,7 @@ const PopupWatchReview = ({ isActive = false, userId, productId, onClose }: Prop
   return (
     <MyPopup
       isActive={isActive}
-      title="Danh sách đánh giá"
+      title={reviewDetail ? 'Chi tiết đánh giá' : 'Danh sách đánh giá'}
       onClose={onClose}
       footer={
         <div className="flex items-center gap-x-4 justify-end">

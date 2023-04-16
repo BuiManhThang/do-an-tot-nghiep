@@ -15,6 +15,8 @@ import baseApi from '@/apis/baseApi'
 import { useValidate, ValidateRule, Validator } from '@/hooks/validateHook'
 import { useToastMsg } from '@/hooks/toastMsgHook'
 import { ToastMsgType } from '@/enum/toastMsg'
+import { PagingResult } from '@/types/paging'
+import PopupWatchReview from '../popup-watch-review/PopupWatchReview'
 
 const VALIDATORS: Validator[] = [
   {
@@ -92,6 +94,8 @@ const PopupAddProduct = ({ isActive = false, productId, onClose, onSave }: Props
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [categories, setCategories] = useState<MySelectOption[]>([])
   const [popupTitle, setPopupTitle] = useState('Thêm mới sản phẩm')
+  const [reviewsCount, setReviewsCount] = useState(0)
+  const [isActivePopupWatchReview, setIsActivePopupWatchReview] = useState(false)
   const [productData, setProductData] = useState<CreateProduct>({
     code: '',
     name: '',
@@ -106,11 +110,27 @@ const PopupAddProduct = ({ isActive = false, productId, onClose, onSave }: Props
   })
 
   useEffect(() => {
+    const getReviewsCount = async () => {
+      try {
+        const res = await baseApi.get('reviews/paging', {
+          productId: productId,
+          pageSize: 1,
+          pageIndex: 1,
+        })
+        const pagingResult: PagingResult = res.data
+        setReviewsCount(pagingResult.total)
+      } catch (error) {
+        console.log(error)
+        setReviewsCount(0)
+      }
+    }
+
     const initPopup = async () => {
       setIsLoading(true)
       if (productId) {
         setPopupTitle('Cập nhật sản phẩm')
         try {
+          getReviewsCount()
           const [categoriesRes, productDataRes] = await Promise.all([
             getCategories(),
             getProductById(productId),
@@ -140,6 +160,7 @@ const PopupAddProduct = ({ isActive = false, productId, onClose, onSave }: Props
       }
 
       setPopupTitle('Thêm mới sản phẩm')
+      setReviewsCount(0)
       try {
         const [categoriesRes, newCodeRes] = await Promise.all([getCategories(), getNewCode()])
         setCategories(categoriesRes)
@@ -251,7 +272,19 @@ const PopupAddProduct = ({ isActive = false, productId, onClose, onSave }: Props
     <>
       <MyPopup
         isActive={isActive}
-        title={popupTitle}
+        title={
+          <div className="flex items-baseline gap-x-6">
+            <div>{popupTitle}</div>
+            {reviewsCount > 0 && (
+              <div
+                className="text-base text-primary cursor-pointer hover:underline"
+                onClick={() => setIsActivePopupWatchReview(true)}
+              >
+                {reviewsCount} đánh giá
+              </div>
+            )}
+          </div>
+        }
         onClose={onClose}
         footer={
           <div className="flex items-center gap-x-4 justify-end">
@@ -493,6 +526,12 @@ const PopupAddProduct = ({ isActive = false, productId, onClose, onSave }: Props
           <span className="font-medium">{productData.code}</span>
         </div>
       </MyPopupConfirm>
+
+      <PopupWatchReview
+        isActive={isActivePopupWatchReview}
+        productId={productId}
+        onClose={() => setIsActivePopupWatchReview(false)}
+      />
     </>
   )
 }

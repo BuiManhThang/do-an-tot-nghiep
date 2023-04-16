@@ -205,7 +205,10 @@ export default class ProductController extends BaseController {
 
       // Filter
       if (searchText !== undefined) {
-        where.OR = [{ code: { contains: searchText } }, { name: { contains: searchText } }]
+        where.OR = [
+          { code: { contains: searchText, mode: 'insensitive' } },
+          { name: { contains: searchText, mode: 'insensitive' } },
+        ]
       }
       if (categoryId !== undefined) {
         where.categoryId = {
@@ -245,6 +248,22 @@ export default class ProductController extends BaseController {
         total: entitiesCount._count,
       }
       return this.success(res, pagingResult)
+    } catch (error) {
+      return this.serverError(res, error)
+    }
+  }
+
+  getProductsByIds = async (req: Request, res: Response) => {
+    try {
+      const productIdsString: string = req.params.ids
+      const productIds = productIdsString.split(';')
+      const products = await this.model.findMany({
+        where: {
+          id: { in: productIds },
+        },
+      })
+
+      return this.success(res, products)
     } catch (error) {
       return this.serverError(res, error)
     }

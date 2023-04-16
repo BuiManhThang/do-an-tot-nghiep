@@ -141,6 +141,13 @@ const SignInPage = () => {
               </Link>
             </div>
           </div>
+          <div className="w-full mt-2">
+            <div className="w-full text-center">
+              <Link href={'/forgot-password'} className="font-medium text-primary hover:underline">
+                Quên mật khẩu
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </>

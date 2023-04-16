@@ -5,7 +5,8 @@ import { DecodedData } from '../models/entity'
 export const authorize = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const formattedDecodedData = await authorizeFunc(req)
-    req.body.userId = formattedDecodedData.userId
+    if (!formattedDecodedData.userId) return res.sendStatus(401)
+    req.body.userIdFromToken = formattedDecodedData.userId
     req.body.userIsAdmin = formattedDecodedData.isAdmin
     return next()
   } catch (error) {
@@ -16,11 +17,24 @@ export const authorize = async (req: Request, res: Response, next: NextFunction)
 export const authorizeAdmin = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const formattedDecodedData = await authorizeFunc(req)
-    if (!formattedDecodedData.isAdmin) {
+    if (!formattedDecodedData.isAdmin || !formattedDecodedData.userId) {
       return res.sendStatus(401)
     }
-    req.body.userId = formattedDecodedData.userId
+    req.body.userIdFromToken = formattedDecodedData.userId
     req.body.userIsAdmin = formattedDecodedData.isAdmin
+    return next()
+  } catch (error) {
+    return res.sendStatus(401)
+  }
+}
+
+export const authorizeResetPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const formattedDecodedData = await authorizeFunc(req)
+    if (!formattedDecodedData.email) {
+      return res.sendStatus(401)
+    }
+    req.body.email = formattedDecodedData.email
     return next()
   } catch (error) {
     return res.sendStatus(401)

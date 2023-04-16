@@ -16,6 +16,7 @@ import MyPopupConfirm from '@/components/my-popup/MyPopupConfirm'
 import MyPopover from '@/components/my-popover/MyPopover'
 import { useToastMsg } from '@/hooks/toastMsgHook'
 import { ToastMsgType } from '@/enum/toastMsg'
+import { handleClientError } from '@/common/errorHandler'
 
 const IS_ACTIVE_OPTIONS: MySelectOption[] = [
   {
@@ -415,8 +416,13 @@ const AdminProductsPage = () => {
       })
     } catch (error) {
       console.log(error)
+      let msg = 'Xóa thất bại'
+      const errorResult = handleClientError(error)
+      if (errorResult.order) {
+        msg = errorResult.order
+      }
       openToast({
-        msg: 'Xóa thất bại',
+        msg,
         type: ToastMsgType.Danger,
       })
     } finally {

@@ -49,6 +49,7 @@ export type ProductInCart = {
   unit: string
   categoryId: string
   categoryName: string
+  amountInSystem: number
 }
 
 export type ProductInOrder = {
@@ -61,4 +62,5 @@ export type ProductInOrder = {
   unit: string
   categoryId: string
   categoryName: string
+  amountInSystem: number
 }

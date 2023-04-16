@@ -102,6 +102,9 @@ export default class AssociationRuleController extends BaseController {
         associationRules = await this.model.findMany({
           select: {
             productConsequents: {
+              where: {
+                isActive: true,
+              },
               select: {
                 id: true,
                 code: true,
@@ -198,6 +201,7 @@ export default class AssociationRuleController extends BaseController {
         id: {
           notIn: exceptIds,
         },
+        isActive: true,
       },
       take: addProductsCount,
       orderBy: {
