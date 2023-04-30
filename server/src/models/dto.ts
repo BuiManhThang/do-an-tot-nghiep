@@ -185,6 +185,6 @@ export type UpdateReviewDto = {
 }
 
 export type CreateViewHistoryDto = {
-  userId: string
+  userIdFromToken: string
   productId: string
 }

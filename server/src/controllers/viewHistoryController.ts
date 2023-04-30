@@ -41,7 +41,7 @@ export default class ViewHistoryController extends BaseController {
 
       const entities = await this.model.findMany({
         where: {
-          userId: entity.userId,
+          userId: entity.userIdFromToken,
         },
         take: 4,
         orderBy: { createdAt: 'asc' },
@@ -212,7 +212,7 @@ export default class ViewHistoryController extends BaseController {
   private createEntity = async (entity: CreateViewHistoryDto) => {
     const newEntity = await this.model.create({
       data: {
-        userId: entity.userId,
+        userId: entity.userIdFromToken,
         productId: entity.productId,
       },
     })
@@ -225,7 +225,7 @@ export default class ViewHistoryController extends BaseController {
         id: entityId,
       },
       data: {
-        userId: entity.userId,
+        userId: entity.userIdFromToken,
         productId: entity.productId,
       },
     })
@@ -233,8 +233,8 @@ export default class ViewHistoryController extends BaseController {
   }
 
   private setPrevValue = (newEntity: CreateViewHistoryDto, oldEntity: ViewHistory) => {
-    if (!newEntity.userId) {
-      newEntity.userId = oldEntity.userId
+    if (!newEntity.userIdFromToken) {
+      newEntity.userIdFromToken = oldEntity.userId
     }
     if (!newEntity.productId) {
       newEntity.productId = oldEntity.productId
