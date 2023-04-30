@@ -10,6 +10,7 @@ import reviewRouter from './routers/reviewRouter'
 import viewHistoryRouter from './routers/viewHistoryRouter'
 import associationRuleRouter from './routers/associationRuleRouter'
 import reportRouter from './routers/reportRouter'
+import inventoryReceiptRouter from './routers/inventoryReceiptRouter'
 
 dotenv.config()
 const PORT = process.env.PORT || 3001
@@ -31,6 +32,7 @@ app.use('/api/v1/users', userRouter)
 app.use('/api/v1/products', productRouter)
 app.use('/api/v1/categories', categoryRouter)
 app.use('/api/v1/orders', orderRouter)
+app.use('/api/v1/inventoryReceipts', inventoryReceiptRouter)
 app.use('/api/v1/reviews', reviewRouter)
 app.use('/api/v1/viewHistory', viewHistoryRouter)
 app.use('/api/v1/associationRules', associationRuleRouter)

@@ -18,6 +18,7 @@ type Props = {
   startIcon?: HTMLElement | ReactElement
   endIcon?: HTMLElement | ReactElement
   isParentLoading?: boolean
+  disabled?: boolean
   onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
   onClickStartIcon?: (e: React.MouseEvent<HTMLDivElement>) => void
   onClickEndIcon?: (e: React.MouseEvent<HTMLDivElement>) => void
@@ -39,6 +40,7 @@ const MyTextArea = ({
   endIcon,
   height,
   isParentLoading = false,
+  disabled = false,
   onChange,
   onClickStartIcon,
   onClickEndIcon,
@@ -55,12 +57,12 @@ const MyTextArea = ({
     )
   }
 
-  let inputClassName = `h-9 border border-gray-400 rounded-md outline-none ring-primary-ring caret-primary px-3 w-full transition-colors focus:border-primary focus:ring-2 py-2 ${
+  let inputClassName = `h-9 border border-gray-400 rounded-md outline-none ring-primary-ring caret-primary px-3 w-full transition-colors focus:border-primary focus:ring-2 py-2 disabled:bg-slate-200 ${
     startIcon ? 'pl-10' : 'pl-3'
   } ${endIcon ? 'pr-10' : ''}`
 
   if (error) {
-    inputClassName = `h-9 border border-red-600 rounded-md outline-none ring-red-200 caret-red-600 w-full transition-colors focus:border-red-600 focus:ring-2 py-2 ${
+    inputClassName = `h-9 border border-red-600 rounded-md outline-none ring-red-200 caret-red-600 w-full transition-colors focus:border-red-600 focus:ring-2 py-2 disabled:bg-slate-200 ${
       startIcon ? 'pl-10' : 'pl-3'
     } ${endIcon ? 'pr-16' : 'pr-10'}`
   }
@@ -104,6 +106,7 @@ const MyTextArea = ({
           autoComplete={autoComplete}
           className={inputClassName + 'resize-none'}
           placeholder={placeholder}
+          disabled={disabled}
           style={{
             ...inputStyle,
             height: height ? `${height}px` : undefined,

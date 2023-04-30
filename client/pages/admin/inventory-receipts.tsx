@@ -1,4 +1,5 @@
 import baseApi from '@/apis/baseApi'
+import MyButton from '@/components/my-button/MyButton'
 import MyPaging from '@/components/my-paging/MyPaging'
 import MySelect, { MySelectOption } from '@/components/my-select/MySelect'
 import MyTable, { Column, TableAlign, TableDataType } from '@/components/my-table/MyTable'
@@ -8,7 +9,9 @@ import { OrderStatus } from '@/enum/orderStatus'
 import { Order } from '@/types/order'
 import { PagingResult } from '@/types/paging'
 import Head from 'next/head'
+import PopupInventoryReceiptDetail from '@/components/popup-inventory-receipt-detail/PopupInventoryReceiptDetail'
 import React, { useEffect, useRef, useState } from 'react'
+import { InventoryReceipt } from '@/types/inventoryReceipt'
 
 const ORDER_BY_OPTIONS: MySelectOption[] = [
   {
@@ -16,16 +19,8 @@ const ORDER_BY_OPTIONS: MySelectOption[] = [
     value: 'code',
   },
   {
-    text: 'Số lượng sản phẩm',
-    value: 'products',
-  },
-  {
-    text: 'Tổng tiền thanh toán',
+    text: 'Tổng tiền nhập',
     value: 'totalMoney',
-  },
-  {
-    text: 'Trạng thái',
-    value: 'status',
   },
 ]
 
@@ -40,30 +35,11 @@ const ORDER_DIRECTION: MySelectOption[] = [
   },
 ]
 
-const STATUS_OPTIONS: MySelectOption[] = [
-  {
-    text: 'Tất cả',
-    value: null,
-  },
-  {
-    text: 'Chờ xác nhận',
-    value: OrderStatus.Pending,
-  },
-  {
-    text: 'Đã xác nhận',
-    value: OrderStatus.Confirmed,
-  },
-  {
-    text: 'Đã giao dịch',
-    value: OrderStatus.Success,
-  },
-]
-
 const COLUMNS: Column[] = [
   {
     dataType: TableDataType.Text,
     fieldName: 'code',
-    title: 'Mã đơn hàng',
+    title: 'Mã đơn nhập',
     width: 125,
     minWidth: 125,
   },
@@ -71,22 +47,22 @@ const COLUMNS: Column[] = [
     dataType: TableDataType.Text,
     fieldName: 'user',
     childFieldName: 'code',
-    title: 'Mã người đặt',
-    width: 125,
-    minWidth: 125,
+    title: 'Mã người nhập',
+    width: 135,
+    minWidth: 135,
   },
   {
     dataType: TableDataType.Text,
     fieldName: 'user',
     childFieldName: 'name',
-    title: 'Họ tên người đặt',
+    title: 'Họ tên người nhập',
     minWidth: 200,
   },
   {
     dataType: TableDataType.Text,
     fieldName: 'user',
     childFieldName: 'phoneNumber',
-    title: 'SĐT người đặt',
+    title: 'SĐT người nhập',
     minWidth: 150,
     width: 150,
   },
@@ -94,7 +70,7 @@ const COLUMNS: Column[] = [
     dataType: TableDataType.Text,
     fieldName: 'user',
     childFieldName: 'email',
-    title: 'Email người đặt',
+    title: 'Email người nhập',
     minWidth: 200,
     width: 200,
   },
@@ -105,10 +81,10 @@ const COLUMNS: Column[] = [
     title: 'Số lượng sản phẩm',
     width: 170,
     minWidth: 170,
-    template: (rowData: any) => {
+    template: (rowData: InventoryReceipt) => {
       return (
         <>
-          <div className="text-right">{rowData.products.length}</div>
+          <div className="text-right">{rowData.inventoryReceiptDetails.length}</div>
         </>
       )
     },
@@ -117,41 +93,9 @@ const COLUMNS: Column[] = [
     dataType: TableDataType.Money,
     align: TableAlign.Right,
     fieldName: 'totalMoney',
-    title: 'Tổng tiền thanh toán',
+    title: 'Tổng tiền nhập',
     minWidth: 200,
     width: 200,
-  },
-  {
-    dataType: TableDataType.Custom,
-    align: TableAlign.Center,
-    fieldName: 'status',
-    title: 'Trạng thái',
-    minWidth: 170,
-    width: 170,
-    template: (rowData: any) => {
-      const order: Order = rowData
-      return (
-        <div className="flex items-center justify-center">
-          <div
-            className={`flex items-center justify-center font-medium border-2 rounded-md cursor-default w-36 ${
-              order.status === OrderStatus.Pending
-                ? 'border-orange-500 text-orange-500'
-                : order.status === OrderStatus.Confirmed
-                ? 'border-primary text-primary'
-                : 'border-green-500 text-green-500'
-            }`}
-          >
-            {order.status === OrderStatus.Pending ? (
-              <div>Chờ xác nhận</div>
-            ) : order.status === OrderStatus.Confirmed ? (
-              <div>Đã xác nhận</div>
-            ) : (
-              <div>Đã giao dịch</div>
-            )}
-          </div>
-        </div>
-      )
-    },
   },
   {
     dataType: TableDataType.Date,
@@ -165,7 +109,6 @@ const COLUMNS: Column[] = [
 
 type SearchParams = {
   searchText: string
-  status: OrderStatus | null
   sort: string
   direction: string
   pageIndex: number
@@ -173,9 +116,8 @@ type SearchParams = {
 }
 
 const getPagingFunc = async (searchParams: SearchParams): Promise<PagingResult> => {
-  const res = await baseApi.get('orders/paging', {
+  const res = await baseApi.get('inventoryReceipts/paging', {
     searchText: searchParams.searchText ? searchParams.searchText : undefined,
-    status: searchParams.status ? searchParams.status : undefined,
     pageIndex: searchParams.pageIndex,
     pageSize: searchParams.pageSize,
     sort: searchParams.sort,
@@ -184,7 +126,7 @@ const getPagingFunc = async (searchParams: SearchParams): Promise<PagingResult> 
   return res.data as PagingResult
 }
 
-const AdminOrdersPage = () => {
+const AdminInventoryReceiptsPage = () => {
   const timeoutFunc = useRef<NodeJS.Timeout | undefined>(undefined)
   const tabelContainerRef = useRef<HTMLDivElement>(null)
   const [editEntityId, setEditEntityId] = useState<string>('')
@@ -194,9 +136,8 @@ const AdminOrdersPage = () => {
   const [totalRecords, setTotalRecords] = useState<number>(0)
   const [searchParams, setSearchParams] = useState<SearchParams>({
     searchText: '',
-    status: null,
-    sort: 'status',
-    direction: 'asc',
+    sort: 'code',
+    direction: 'desc',
     pageIndex: 1,
     pageSize: 20,
   })
@@ -207,9 +148,8 @@ const AdminOrdersPage = () => {
       try {
         const pagingResult = await getPagingFunc({
           searchText: '',
-          status: null,
-          sort: 'status',
-          direction: 'asc',
+          sort: 'code',
+          direction: 'desc',
           pageIndex: 1,
           pageSize: 20,
         })
@@ -254,16 +194,6 @@ const AdminOrdersPage = () => {
     }, 500)
   }
 
-  const handleChangeStatus = (status: string | number | boolean | null | undefined) => {
-    const newSearchParams: SearchParams = {
-      ...searchParams,
-      status: status ? (status as OrderStatus) : null,
-      pageIndex: 1,
-    }
-    setSearchParams(newSearchParams)
-    getPaging(newSearchParams)
-  }
-
   const handleChangeSort = (sort: string | number | boolean | null | undefined) => {
     const newSearchParams: SearchParams = {
       ...searchParams,
@@ -305,7 +235,7 @@ const AdminOrdersPage = () => {
     getPaging(newSearchParams)
   }
 
-  const openPopupAdd = (entityId?: string) => {
+  const openPopupDetail = (entityId?: string) => {
     if (entityId) {
       setEditEntityId(entityId)
     } else {
@@ -321,40 +251,33 @@ const AdminOrdersPage = () => {
     }
   }
 
-  const handleClickEdit = (e: Order) => {
-    openPopupAdd(e.id)
+  const handleClickWatch = (e: Order) => {
+    openPopupDetail(e.id)
+  }
+
+  const handleClickAdd = () => {
+    openPopupDetail()
   }
 
   return (
     <div className="h-full">
       <Head>
-        <title>Quản lý đơn hàng</title>
+        <title>Quản lý đơn nhập</title>
       </Head>
-      <h2 className="font-bold text-xl mb-6 leading-none">Quản lý đơn hàng</h2>
+      <h2 className="font-bold text-xl mb-6 leading-none">Quản lý đơn nhập</h2>
 
       <div className="flex items-start justify-between mb-6">
         <div className="w-80">
           <MyTextField
             id="searchText"
             name="searchText"
-            placeholder="Nhập mã đơn hàng, tên người đặt"
+            placeholder="Nhập mã đơn nhập, tên người nhập, ..."
             startIcon={<i className="fa-solid fa-magnifying-glass text-gray-500"></i>}
             value={searchParams.searchText}
             onChange={handleChangeSearchText}
           />
         </div>
         <div className="flex items-center gap-x-4">
-          <div className="w-60">
-            <MySelect
-              id="status"
-              name="status"
-              label="Trạng thái"
-              isHorizontal={true}
-              value={searchParams.status}
-              options={STATUS_OPTIONS}
-              onChange={handleChangeStatus}
-            />
-          </div>
           <div className="w-60">
             <MySelect
               id="sort"
@@ -377,6 +300,13 @@ const AdminOrdersPage = () => {
               onChange={handleChangeSortDirection}
             />
           </div>
+          <div>
+            <MyButton
+              text="Nhập hàng"
+              startIcon={<i className="fa-solid fa-plus"></i>}
+              onClick={() => handleClickAdd()}
+            />
+          </div>
         </div>
       </div>
 
@@ -394,7 +324,7 @@ const AdminOrdersPage = () => {
           editIcon={
             <i className="fa-solid fa-eye text-lg leading-none text-gray-700 cursor-pointer transition-colors hover:text-primary"></i>
           }
-          onEdit={handleClickEdit}
+          onEdit={handleClickWatch}
         />
       </div>
 
@@ -408,14 +338,14 @@ const AdminOrdersPage = () => {
         />
       </div>
 
-      <PopupOrderDetail
+      <PopupInventoryReceiptDetail
         isActive={isActivePopupDetail}
-        isAdminView={true}
-        orderId={editEntityId}
+        entityId={editEntityId}
         onClose={closePopupDetail}
+        onSave={() => closePopupDetail(true)}
       />
     </div>
   )
 }
 
-export default AdminOrdersPage
+export default AdminInventoryReceiptsPage

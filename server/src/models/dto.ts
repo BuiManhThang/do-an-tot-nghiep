@@ -43,6 +43,14 @@ export type WhereOrderParam = WhereParam & {
   status?: number
 }
 
+export type PagingInventoryReceiptParam = PagingParam & {
+  userId?: string
+}
+
+export type WhereInventoryReceiptParam = WhereParam & {
+  userId?: string
+}
+
 export type PagingReviewParam = PagingParam & {
   productId?: string
   userId?: string
@@ -187,4 +195,19 @@ export type UpdateReviewDto = {
 export type CreateViewHistoryDto = {
   userIdFromToken: string
   productId: string
+}
+
+export type CreateInventoryReceiptDto = {
+  code: string
+  note?: string
+  totalMoney: number
+  userIdFromToken: string
+  inventoryReceiptDetails: CreateInventoryReceiptProduct[]
+}
+
+export type CreateInventoryReceiptProduct = {
+  importPrice: number
+  amount: number
+  productId: string
+  inventoryReceiptId: string
 }

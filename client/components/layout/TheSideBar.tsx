@@ -30,6 +30,11 @@ const SIDE_BAR_LINKS: SideBarLink[] = [
     url: '/admin/orders',
   },
   {
+    text: 'Đơn nhập',
+    icon: <i className="fa-solid fa-warehouse"></i>,
+    url: '/admin/inventory-receipts',
+  },
+  {
     text: 'Người dùng',
     icon: <i className="fa-solid fa-users"></i>,
     url: '/admin/users',

@@ -4,6 +4,7 @@ import MyLoadingSkeleton from '../my-loading-skeleton/MyLoadingSkeleton'
 export type MySelectOption = {
   text: string
   value: string | number | boolean | undefined | null
+  extraData?: any
 }
 
 type MyTextFieldProps = {
@@ -20,8 +21,14 @@ type MyTextFieldProps = {
   isOptionsTop?: boolean
   disabled?: boolean
   displayedItems?: number
+  isSelectOnly?: boolean
   isParentLoading?: boolean
+  optionTemplate?: (
+    option: MySelectOption,
+    selectedOption: MySelectOption | null
+  ) => React.ReactNode
   startIcon?: HTMLElement | ReactElement
+  onQuery?: (pageIndex: number, searchText: string) => void
   onChange?: (selectedOptionValue: string | number | boolean | undefined | null) => void
   onClickStartIcon?: (e: React.MouseEvent<HTMLDivElement>) => void
 }
@@ -40,12 +47,16 @@ const MySelect = ({
   isOptionsTop = false,
   disabled = false,
   displayedItems = 5,
+  isSelectOnly = true,
   isParentLoading = false,
+  optionTemplate,
   startIcon,
   onChange,
+  onQuery,
   onClickStartIcon,
 }: MyTextFieldProps) => {
   const inputRef = useRef<HTMLInputElement>(null)
+  const timeoutFunc = useRef<NodeJS.Timeout | undefined>(undefined)
   const [inputValue, setInputValue] = useState<string>('')
   const [isActive, setIsActive] = useState<boolean>(false)
   const [hoverIndex, setHoverIndex] = useState<number>(-1)
@@ -78,8 +89,13 @@ const MySelect = ({
     )
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value)
+  const handleQuery = (pageIndex: number, searchText: string) => {
+    clearTimeout(timeoutFunc.current)
+    timeoutFunc.current = setTimeout(() => {
+      if (isSelectOnly) return
+      if (typeof onQuery !== 'function') return
+      onQuery(pageIndex, searchText)
+    }, 400)
   }
 
   const handleClickStartIcon = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -108,6 +124,12 @@ const MySelect = ({
     inputRef.current?.focus()
   }
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value)
+    handleQuery(1, e.target.value)
+    openOptions()
+  }
+
   const closeOptions = () => {
     setTimeout(() => {
       setIsActive(false)
@@ -124,6 +146,7 @@ const MySelect = ({
       e.preventDefault()
       if (!isActive) {
         openOptions()
+        handleQuery(1, '')
         return
       }
       const nextIndex = hoverIndex + 1
@@ -134,6 +157,7 @@ const MySelect = ({
       e.preventDefault()
       if (!isActive) {
         openOptions()
+        handleQuery(1, inputValue)
         return
       }
       const prevIndex = hoverIndex - 1
@@ -144,6 +168,7 @@ const MySelect = ({
       e.preventDefault()
       if (!isActive) {
         openOptions()
+        handleQuery(1, inputValue)
         return
       }
       if (hoverIndex === -1) {
@@ -161,6 +186,7 @@ const MySelect = ({
       return
     }
     openOptions()
+    handleQuery(1, '')
   }
 
   return (
@@ -183,7 +209,7 @@ const MySelect = ({
           name={name}
           value={inputValue}
           autoComplete="off"
-          readOnly={true}
+          readOnly={isSelectOnly ? true : false}
           disabled={disabled}
           className={inputClassName}
           style={inputStyle}
@@ -216,6 +242,8 @@ const MySelect = ({
             }}
           >
             {options.map((option, index) => {
+              if (optionTemplate)
+                return <div key={`${option.value}`}>{optionTemplate(option, selectedOption)}</div>
               return (
                 <li
                   key={`${option.value}`}
