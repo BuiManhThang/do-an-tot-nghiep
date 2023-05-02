@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { useAppDispatch, useAppSelector } from '@/hooks/reduxHook'
 import MyUploadThumbnail from '@/components/my-upload-img/MyUploadThumbnail'
 import MyTextField from '@/components/my-text-field/MyTextField'
-import { User } from '@/types/user'
+import { EditUser, User } from '@/types/user'
 import { useValidate, ValidateRule, Validator } from '@/hooks/validateHook'
 import MyButton from '@/components/my-button/MyButton'
 import MyPopupConfirm from '@/components/my-popup/MyPopupConfirm'
@@ -37,6 +37,8 @@ const VALIDATORS: Validator[] = [
 const getOrdersByUserId = async (userId: string): Promise<PagingResult> => {
   const res = await baseApi.get('orders/paging', {
     userId,
+    sort: 'createdAt',
+    direction: 'desc',
   })
   const pagingResult: PagingResult = res.data
   return pagingResult
@@ -54,7 +56,7 @@ const InForPage = () => {
   const [totalMoney, setTotalMoney] = useState<number>(0)
   const [isActivePopupConfirm, setIsActivePopupConfirm] = useState(false)
   const [isLoadingSave, setIsLoadingSave] = useState(false)
-  const [currentUserInfo, setCurrentUserInfo] = useState<User>({
+  const [currentUserInfo, setCurrentUserInfo] = useState<EditUser>({
     avatar: '',
     code: '',
     cart: [],
@@ -132,7 +134,7 @@ const InForPage = () => {
     }
   }
 
-  const handleChange = (func: (prev: User) => User) => {
+  const handleChange = (func: (prev: EditUser) => EditUser) => {
     return setCurrentUserInfo((prev) => {
       const newVal = func(prev)
       if (isValidated) {

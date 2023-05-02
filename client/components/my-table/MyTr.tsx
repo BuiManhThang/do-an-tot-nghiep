@@ -1,7 +1,7 @@
 import React from 'react'
 import MyCheckbox from '../my-checkbox/MyCheckbox'
 import { Column, TableAlign, TableDataType } from './MyTable'
-import { convertDate } from '@/common/format'
+import { convertDate, numberWithCommas } from '@/common/format'
 
 type Props = {
   columns: Column[]
@@ -167,6 +167,9 @@ const MyTr = ({
         switch (column.dataType) {
           case TableDataType.Date:
             rowValue = convertDate(rowValue)
+            break
+          case TableDataType.Money:
+            rowValue = `${numberWithCommas(rowValue)}đ`
             break
         }
 

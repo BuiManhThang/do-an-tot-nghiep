@@ -25,7 +25,7 @@ export const cartSlice = createSlice({
       const newProductsInCart: ProductInCart[] = [...state.products]
       const foundedInCart = newProductsInCart.find((product) => product.id === addedProduct.id)
       if (foundedInCart) {
-        foundedInCart.amount += addedProduct.amount
+        foundedInCart.amount = addedProduct.amount
       } else {
         newProductsInCart.push(addedProduct)
         const userId = localStorage.getItem('userId')

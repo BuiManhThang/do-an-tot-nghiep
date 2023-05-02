@@ -12,18 +12,14 @@ type Props = {
 const MyCounter = ({ id, name, value, min, max, onChange }: Props) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (typeof onChange !== 'function') return
-    if (e.target.value === '') onChange('')
+    console.log(e.target.value)
+    if (e.target.value === '') onChange(min || 0)
     else onChange(parseInt(e.target.value))
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key.length > 1) {
-      return
-    }
-    if (/\d/.test(e.key)) {
-      return
-    }
-    e.preventDefault()
+    // if (typeof onChange !== 'function') return
+    // onChange(Number(e.currentTarget.value || 0))
   }
 
   const handleIncrement = () => {
@@ -42,29 +38,30 @@ const MyCounter = ({ id, name, value, min, max, onChange }: Props) => {
 
   return (
     <div className="flex items-center h-9 border bg-white border-gray-400 rounded-md ring-primary-ring transition-colors focus-within:border-primary focus-within:ring-2 overflow-hidden">
-      <div
-        className="w-9 h-9 flex items-center justify-center text-lg cursor-pointer hover:bg-primary hover:text-white transition-colors flex-shrink-0"
+      {/* <div
+        className="w-5 h-9 flex items-center justify-center text-lg cursor-pointer hover:bg-primary hover:text-white transition-colors flex-shrink-0"
         onClick={handleDecrement}
       >
         <i className="fa-solid fa-minus"></i>
-      </div>
+      </div> */}
       <input
-        className="outline-none caret-primary px-3 w-full disabled:bg-slate-200 h-full border-x border-gray-400 text-center cursor-default"
-        type="text"
+        className="outline-none caret-primary px-3 w-full disabled:bg-slate-200 h-full text-center cursor-default"
+        type="number"
         name={name}
         id={id}
         value={value}
-        readOnly={true}
+        min={min}
+        step={1}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
       />
 
-      <div
-        className="w-9 h-9 flex items-center justify-center text-lg cursor-pointer hover:bg-primary hover:text-white transition-colors flex-shrink-0"
+      {/* <div
+        className="w-5 h-9 flex items-center justify-center text-lg cursor-pointer hover:bg-primary hover:text-white transition-colors flex-shrink-0"
         onClick={handleIncrement}
       >
         <i className="fa-solid fa-plus"></i>
-      </div>
+      </div> */}
     </div>
   )
 }

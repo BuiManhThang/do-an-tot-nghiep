@@ -224,7 +224,7 @@ const PopupInventoryReceiptDetail = ({ isActive = false, entityId, onClose, onSa
                 id="userId"
                 name="userId"
                 label="Người lập"
-                value={useInfo?.name}
+                value={`${useInfo?.code} - ${useInfo?.name}`}
                 disabled={true}
                 isParentLoading={isLoading}
               />

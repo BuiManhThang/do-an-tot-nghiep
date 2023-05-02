@@ -18,18 +18,18 @@ const CartItem = ({ columns, isView = false, itemData }: Props) => {
   const dispatch = useAppDispatch()
 
   const handleChangeCounter = (e: number | '') => {
-    if (e === '') {
-      return
-    }
+    // if (e === '') {
+    //   return
+    // }
     const addedProduct: ProductInCart = {
       ...itemData,
     }
-    addedProduct.amount = 1
-    if (e > itemData.amount) {
-      dispatch(addToCart(addedProduct))
-      return
-    }
-    dispatch(minusFromCart(addedProduct))
+    addedProduct.amount = e || 1
+    // if (e > itemData.amount) {
+    //   dispatch(addToCart(addedProduct))
+    //   return
+    // }
+    dispatch(addToCart(addedProduct))
   }
 
   const handleClickDelete = () => {

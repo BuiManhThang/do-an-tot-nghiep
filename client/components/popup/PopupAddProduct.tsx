@@ -40,11 +40,6 @@ const VALIDATORS: Validator[] = [
     rules: [ValidateRule.Required],
   },
   {
-    field: 'amount',
-    name: 'Số lượng',
-    rules: [ValidateRule.Required],
-  },
-  {
     field: 'image',
     name: 'Ảnh đại diện',
     rules: [ValidateRule.Required],
@@ -100,7 +95,7 @@ const PopupAddProduct = ({ isActive = false, productId, onClose, onSave }: Props
     code: '',
     name: '',
     image: '',
-    amount: '',
+    amount: 0,
     price: '',
     unit: '',
     isActive: true,
@@ -187,7 +182,7 @@ const PopupAddProduct = ({ isActive = false, productId, onClose, onSave }: Props
       code: '',
       name: '',
       image: '',
-      amount: '',
+      amount: 0,
       price: '',
       unit: '',
       isActive: true,
@@ -418,7 +413,7 @@ const PopupAddProduct = ({ isActive = false, productId, onClose, onSave }: Props
               />
             </div>
 
-            <div className="row-start-4 row-end-5 col-start-2">
+            {/* <div className="row-start-4 row-end-5 col-start-2">
               <MyTextField
                 id="amount"
                 name="amount"
@@ -436,7 +431,7 @@ const PopupAddProduct = ({ isActive = false, productId, onClose, onSave }: Props
                   }))
                 }
               />
-            </div>
+            </div> */}
 
             <div>
               {isLoading ? (
@@ -479,14 +474,14 @@ const PopupAddProduct = ({ isActive = false, productId, onClose, onSave }: Props
               )}
             </div>
 
-            <div className="row-start-6 row-end-[8]">
+            <div className="row-start-5 row-end-[8]">
               <MyTextArea
                 id="desc"
                 name="desc"
                 label="Mô tả"
                 isParentLoading={isLoading}
                 value={productData.desc}
-                height={95}
+                height={174}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                   handleChange((prev) => ({
                     ...prev,

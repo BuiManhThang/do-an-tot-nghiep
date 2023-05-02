@@ -38,20 +38,44 @@ const COLUMNS: Column[] = [
     },
   },
   {
+    dataType: TableDataType.Custom,
+    align: TableAlign.Left,
+    fieldName: 'name',
+    title: 'Tên sản phẩm',
+    width: 150,
+    minWidth: 150,
+    template: (rowData) => {
+      const inventoryReceiptDetail: InventoryReceiptDetail = rowData as InventoryReceiptDetail
+      return (
+        <div
+          className="w-full overflow-hidden"
+          style={{
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            display: '-webkit-box',
+          }}
+          title={inventoryReceiptDetail.product.name}
+        >
+          {inventoryReceiptDetail.product.name}
+        </div>
+      )
+    },
+  },
+  {
     dataType: TableDataType.Text,
     align: TableAlign.Right,
     fieldName: 'amount',
-    title: 'Số lượng',
-    width: 150,
-    minWidth: 150,
+    title: 'SL',
+    width: 75,
+    minWidth: 75,
   },
   {
     dataType: TableDataType.Money,
     align: TableAlign.Right,
     fieldName: 'importPrice',
     title: 'Giá nhập',
-    width: 150,
-    minWidth: 150,
+    width: 100,
+    minWidth: 100,
   },
 ]
 

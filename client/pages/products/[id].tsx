@@ -99,7 +99,7 @@ const ProductDetailPage = () => {
 
   const handleClickAddToCart = () => {
     if (!productData) return
-    const addedProduct: ProductInCart = {
+    const addedProduct = {
       amount: buyNumber,
       id: productData.id,
       name: productData.name,
