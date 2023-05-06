@@ -1,17 +1,27 @@
-import { PrismaClient, ProductInOrder } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import { Request, Response } from 'express'
 import { BaseController } from './baseController'
-import { Order, ValidateError } from '../models/entity'
+import { Order, OrderDetail, Product, ProductInOrder, ValidateError } from '../models/entity'
 import {
   CreateOrderDto,
   PagingResult,
   UpdateOrderDto,
   PagingOrderParam,
   WhereOrderParam,
+  CreateOrderDetailDto,
 } from '../models/dto'
 import { OrderStatus } from '../models/enum'
 import { sendMail } from '../common/mailService'
 import { numberWithCommas } from '../common/format'
+
+type OrderSendMail = {
+  code: string
+  createdAt: Date
+  userName: string
+  userEmail: string
+  products: ProductInOrder[]
+  totalMoney: number
+}
 
 export default class OrderController extends BaseController {
   private readonly prisma: PrismaClient
@@ -28,6 +38,7 @@ export default class OrderController extends BaseController {
     try {
       const entity: CreateOrderDto = req.body
 
+      // Kiểm tra số lượng trong kho
       const productIds = entity.products.map((p) => p.id)
       const products = await this.prisma.product.findMany({
         where: {
@@ -53,7 +64,25 @@ export default class OrderController extends BaseController {
       }
 
       entity.code = await this.genereateNewCode()
-      const newEntity = await this.createEntity(entity)
+      const detailOrders: CreateOrderDetailDto[] = entity.products.map((product) => ({
+        amount: product.amount,
+        price: product.price,
+        productId: product.id,
+        total: product.amount * product.price,
+      }))
+      const newEntity = await this.model.create({
+        data: {
+          code: entity.code,
+          note: entity.note,
+          totalMoney: entity.totalMoney,
+          userId: entity.userId,
+          orderDetails: {
+            createMany: {
+              data: detailOrders,
+            },
+          },
+        },
+      })
 
       // Xóa giỏ hàng
       const result = await this.prisma.user.update({
@@ -80,35 +109,51 @@ export default class OrderController extends BaseController {
         where: {
           id: entityId,
         },
+        include: {
+          orderDetails: {
+            include: {
+              product: true,
+            },
+          },
+        },
       })
       if (!model) {
         return this.notFound(res)
       }
 
-      this.setPrevValue(entity, model as Order)
+      if (!entity.code) {
+        entity.code = model.code
+      }
+      if (!entity.note) {
+        entity.note = model.note || undefined
+      }
+      if (!entity.status) {
+        entity.status = model.status
+      }
+      if (!entity.totalMoney) {
+        entity.totalMoney = model.totalMoney
+      }
+      if (!entity.userId) {
+        entity.userId = model.userId
+      }
 
-      entity.products = entity.products.map((p) => {
-        return {
-          id: p.id,
-          code: p.code,
-          name: p.name,
-          image: p.image,
-          amount: p.amount,
-          price: p.price,
-          unit: p.unit,
-          categoryId: p.categoryId,
-          categoryName: p.categoryName,
+      const productOfOrders: { id: string; amount: number }[] = model.orderDetails.map(
+        (orderDetail) => {
+          return {
+            id: orderDetail.product.id,
+            amount: orderDetail.amount,
+          }
         }
-      })
-
-      const productIds = model.products.map((p) => p.id)
+      )
+      // Kiểm tra số lượng trong kho
+      const productIds = productOfOrders.map((p) => p.id)
       const products = await this.prisma.product.findMany({
         where: {
           id: { in: productIds },
         },
       })
       if (
-        model.products.some((product) => {
+        productOfOrders.some((product) => {
           const foundProduct = products.find((p) => p.id === product.id)
           if (!foundProduct) return false
           if (product.amount > foundProduct.amount) return true
@@ -125,12 +170,26 @@ export default class OrderController extends BaseController {
         return this.clientError(res, errors)
       }
 
-      const updatedEntity = await this.updateEntity(entityId, entity)
+      const updatedEntity = await this.model.update({
+        where: {
+          id: entityId,
+        },
+        include: {
+          user: true,
+        },
+        data: {
+          code: entity.code,
+          note: entity.note,
+          status: entity.status,
+          totalMoney: entity.totalMoney,
+          userId: entity.userId,
+        },
+      })
 
       if (updatedEntity.status === OrderStatus.Confirmed) {
         // Trừ số lượng sản phẩm trong kho
         const requestList: any[] = []
-        updatedEntity.products.forEach((product) => {
+        productOfOrders.forEach((product) => {
           requestList.push(
             this.prisma.product.update({
               where: {
@@ -146,8 +205,17 @@ export default class OrderController extends BaseController {
         })
         await Promise.all(requestList)
 
+        const formatedUpdateEntity: OrderSendMail = {
+          code: updatedEntity.code,
+          createdAt: updatedEntity.createdAt,
+          totalMoney: updatedEntity.totalMoney,
+          userName: updatedEntity.user.name,
+          userEmail: updatedEntity.user.email,
+          products: entity.products,
+        }
+
         // Gửi email cho người dùng
-        this.sendMailToUser(updatedEntity as Order)
+        this.sendMailToUser(formatedUpdateEntity)
       }
 
       // Tạo transaction
@@ -155,7 +223,7 @@ export default class OrderController extends BaseController {
         await this.prisma.transaction.create({
           data: {
             orderId: entityId,
-            productIds: updatedEntity.products.map((p) => p.id),
+            productIds: productIds,
           },
         })
       }
@@ -177,6 +245,12 @@ export default class OrderController extends BaseController {
       if (!model) {
         return this.notFound(res)
       }
+
+      await this.prisma.orderDetail.deleteMany({
+        where: {
+          orderId: id,
+        },
+      })
 
       const deletedModel = await this.model.delete({
         where: {
@@ -205,6 +279,11 @@ export default class OrderController extends BaseController {
               phoneNumber: true,
             },
           },
+          orderDetails: {
+            include: {
+              product: true,
+            },
+          },
         },
         where: {
           id,
@@ -214,9 +293,14 @@ export default class OrderController extends BaseController {
         return this.notFound(res)
       }
 
-      if (model.status !== OrderStatus.Pending) return this.success(res, model)
+      if (model.status !== OrderStatus.Pending) {
+        return this.success(res, {
+          ...model,
+          products: model.orderDetails.map((orderDetail) => orderDetail.product),
+        })
+      }
 
-      const productIds = model.products.map((p) => p.id)
+      const productIds = model.orderDetails.map((orderDetail) => orderDetail.productId)
       const products = await this.prisma.product.findMany({
         where: {
           id: { in: productIds },
@@ -225,14 +309,15 @@ export default class OrderController extends BaseController {
 
       const result = {
         ...model,
-        products: model.products.map((product) => {
+        products: model.orderDetails.map((orderDetail) => {
           let amountInSystem = 0
-          const foundProduct = products.find((p) => p.id === product.id)
+          const foundProduct = products.find((p) => p.id === orderDetail.productId)
           if (foundProduct) {
             amountInSystem = foundProduct.amount
           }
           return {
-            ...product,
+            ...orderDetail.product,
+            amount: orderDetail.amount,
             amountInSystem,
           }
         }),
@@ -303,20 +388,31 @@ export default class OrderController extends BaseController {
         this.model.findMany({
           include: {
             user: true,
+            orderDetails: {
+              include: {
+                product: true,
+              },
+            },
           },
           where,
           skip,
           take,
-          orderBy: sort === 'products' ? { products: { _count: direction } } : orderBy,
+          orderBy: sort === 'products' ? { orderDetails: { _count: direction } } : orderBy,
         }),
-        this.model.aggregate({
+        this.model.count({
           where,
-          _count: true,
         }),
       ])
       const pagingResult: PagingResult = {
-        data: entities,
-        total: entitiesCount._count,
+        data: entities.map((entity) => ({
+          ...entity,
+          orderDetails: null,
+          products: entity.orderDetails.map((orderDetail) => ({
+            ...orderDetail.product,
+            amount: orderDetail.amount,
+          })),
+        })),
+        total: entitiesCount,
       }
       return this.success(res, pagingResult)
     } catch (error) {
@@ -333,7 +429,7 @@ export default class OrderController extends BaseController {
     }
   }
 
-  private sendMailToUser = async (order: Order) => {
+  private sendMailToUser = async (order: OrderSendMail) => {
     try {
       const htmlString = `
       <h1>Xác nhận đơn hàng của bạn</h1>
@@ -426,7 +522,7 @@ export default class OrderController extends BaseController {
         <span style="font-weight: 700;">${numberWithCommas(order.totalMoney)}đ</span>
       </div>`
 
-      await sendMail(order.user.email, 'Xác nhận đơn hàng', htmlString)
+      await sendMail(order.userEmail, 'Xác nhận đơn hàng', htmlString)
     } catch (error) {
       console.log(error)
     }
@@ -450,59 +546,5 @@ export default class OrderController extends BaseController {
       code = `${this.codePrefix}.${newCodeNumber.toString().padStart(4, '0')}`
     }
     return code
-  }
-
-  private createEntity = async (entity: CreateOrderDto) => {
-    const newEntity = await this.model.create({
-      data: {
-        code: entity.code,
-        note: entity.note,
-        totalMoney: entity.totalMoney,
-        userId: entity.userId,
-        products: entity.products,
-      },
-    })
-    return newEntity
-  }
-
-  private updateEntity = async (entityId: string, entity: UpdateOrderDto) => {
-    const updatedEntity = await this.model.update({
-      where: {
-        id: entityId,
-      },
-      include: {
-        user: true,
-      },
-      data: {
-        code: entity.code,
-        note: entity.note,
-        status: entity.status,
-        totalMoney: entity.totalMoney,
-        userId: entity.userId,
-        products: entity.products,
-      },
-    })
-    return updatedEntity
-  }
-
-  private setPrevValue = (newEntity: UpdateOrderDto, oldEntity: Order) => {
-    if (!newEntity.code) {
-      newEntity.code = oldEntity.code
-    }
-    if (!newEntity.note) {
-      newEntity.note = oldEntity.note
-    }
-    if (!newEntity.status) {
-      newEntity.status = oldEntity.status
-    }
-    if (!newEntity.totalMoney) {
-      newEntity.totalMoney = oldEntity.totalMoney
-    }
-    if (!newEntity.userId) {
-      newEntity.userId = oldEntity.userId
-    }
-    if (!newEntity.products) {
-      newEntity.products = oldEntity.products
-    }
   }
 }

@@ -5,6 +5,15 @@ import { AssociationRule, Category, Product } from '../models/entity'
 import { CreateCategoryDto, PagingParam, PagingResult, UpdateCategoryDto } from '../models/dto'
 import { OrderStatus } from '../models/enum'
 
+type StaticalRevenueOfProductsParams = {
+  startDate: string
+  endDate: string
+  sort: 'amount' | 'total'
+  direction: 'asc' | 'desc'
+  pageIndex: string
+  pageSize: string
+}
+
 export default class ReportController extends BaseController {
   private readonly prisma: PrismaClient
   constructor() {
@@ -172,6 +181,122 @@ export default class ReportController extends BaseController {
         categories: formattedCategories,
         totalMoney: totalMoney._sum.totalMoney,
       })
+    } catch (error) {
+      return this.serverError(res, error)
+    }
+  }
+
+  getStaticalRevenueOfProducts = async (req: Request, res: Response) => {
+    try {
+      const { direction, endDate, startDate, sort, pageIndex, pageSize } =
+        req.query as unknown as StaticalRevenueOfProductsParams
+
+      let skip = undefined
+      let take = undefined
+
+      // Paging
+      if (pageIndex && pageSize) {
+        const pageIndexNumber = parseInt(pageIndex)
+        const pageSizeNumber = parseInt(pageSize)
+        skip = pageSizeNumber * (pageIndexNumber - 1)
+        take = pageSizeNumber
+      }
+
+      const formatStartDate = new Date(startDate)
+      formatStartDate.setHours(0, 0, 0)
+      const formatEndDate = new Date(endDate)
+      formatEndDate.setHours(23, 59, 59)
+
+      const orders = await this.prisma.order.findMany({
+        where: {
+          createdAt: {
+            gte: formatStartDate,
+            lte: formatEndDate,
+          },
+          status: { in: [OrderStatus.Confirmed, OrderStatus.Success] },
+        },
+        select: {
+          id: true,
+        },
+      })
+      const orderIds = orders.map((order) => order.id)
+
+      const result = await this.prisma.orderDetail.groupBy({
+        by: ['productId'],
+        where: {
+          orderId: { in: orderIds },
+        },
+        _sum: {
+          amount: true,
+          total: true,
+        },
+        orderBy: {
+          _sum: {
+            [sort]: direction,
+          },
+        },
+        skip,
+        take,
+      })
+
+      const productIds = result.map((r) => r.productId)
+      const products = await this.prisma.product.findMany({
+        where: {
+          id: { in: productIds },
+        },
+      })
+      const mapProducts = new Map()
+      products.forEach((product) => {
+        mapProducts.set(product.id, product)
+      })
+
+      let additionProducts: any[] = []
+      // Nếu ko có pageIndex và pageSize tức là đang lấy báo cáo để export
+      if (!pageIndex && !pageSize) {
+        additionProducts = await this.prisma.product.findMany({
+          where: {
+            id: { notIn: productIds },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        })
+      }
+
+      additionProducts = additionProducts.map((p: Product) => ({
+        ...p,
+        sellAmount: 0,
+        sellMoney: 0,
+      }))
+
+      let finalResult: any[] = []
+      if (direction === 'asc') {
+        finalResult = [
+          ...additionProducts,
+          ...result.map((r) => {
+            const product = mapProducts.get(r.productId)
+            return {
+              ...product,
+              sellAmount: r._sum.amount,
+              sellMoney: r._sum.total,
+            }
+          }),
+        ]
+      } else {
+        finalResult = [
+          ...result.map((r) => {
+            const product = mapProducts.get(r.productId)
+            return {
+              ...product,
+              sellAmount: r._sum.amount,
+              sellMoney: r._sum.total,
+            }
+          }),
+          ...additionProducts,
+        ]
+      }
+
+      return this.success(res, finalResult)
     } catch (error) {
       return this.serverError(res, error)
     }

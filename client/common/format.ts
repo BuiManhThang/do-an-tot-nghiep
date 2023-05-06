@@ -42,7 +42,7 @@ export const convertDate = (
 
   formas = formas.replace('dd', d < 10 ? `0${d}` : `${d}`)
   formas = formas.replace('MM', m < 10 ? `0${m}` : `${m}`)
-  formas = formas.replace('yyyy', `${y}`)
+  formas = formas.replace('yyyy', y < 10000 ? `${y}`.padStart(4, '0') : `${y}`)
   return formas
 }
 

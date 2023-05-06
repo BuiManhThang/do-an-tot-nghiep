@@ -171,6 +171,13 @@ export type CreateOrderDto = {
   products: ProductInOrder[]
 }
 
+export type CreateOrderDetailDto = {
+  amount: number
+  price: number
+  total: number
+  productId: string
+}
+
 export type UpdateOrderDto = {
   code: string
   note?: string

@@ -65,7 +65,20 @@ export type Order = {
   totalMoney: number
   userId: string
   user: User
-  products: ProductInOrder[]
+  orderDetails: OrderDetail[]
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type OrderDetail = {
+  id: string
+  amount: number
+  price: number
+  total: number
+  orderId: string
+  order: Order
+  productId: string
+  product: Product
   createdAt: Date
   updatedAt: Date
 }

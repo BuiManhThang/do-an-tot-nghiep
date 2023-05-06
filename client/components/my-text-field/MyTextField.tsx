@@ -15,6 +15,7 @@ type MyTextFieldProps = {
   className?: string
   inputStyle?: React.CSSProperties
   required?: boolean
+  isHorizontal?: boolean
   startIcon?: HTMLElement | ReactElement
   endIcon?: HTMLElement | ReactElement
   disabled?: boolean
@@ -42,6 +43,7 @@ const MyTextField = ({
   className,
   inputStyle,
   required = false,
+  isHorizontal = false,
   startIcon,
   endIcon,
   isParentLoading = false,
@@ -115,9 +117,12 @@ const MyTextField = ({
   }
 
   return (
-    <div ref={containerRef} className={`flex flex-col w-full ${className}`}>
+    <div
+      ref={containerRef}
+      className={`flex w-full ${isHorizontal ? 'items-center' : 'flex-col'} ${className}`}
+    >
       {label && (
-        <label htmlFor={id} className="w-max mb-1">
+        <label htmlFor={id} className={`w-max ${isHorizontal ? 'flex-shrink-0 mr-3' : 'mb-1'}`}>
           {label}
           {required && <span className="text-red-600 font-medium pl-1">*</span>}
         </label>

@@ -90,9 +90,10 @@ export default class ProductController extends BaseController {
         return this.notFound(res)
       }
 
+      // Kiểm tra sản phẩm có trong đơn hàng đã xác nhận hay ko
       const order = await this.prisma.order.findFirst({
         where: {
-          products: { some: { id: id } },
+          orderDetails: { some: { productId: id } },
           status: { in: [2, 3] },
         },
       })
