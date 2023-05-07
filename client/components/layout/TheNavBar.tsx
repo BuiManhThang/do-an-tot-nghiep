@@ -7,6 +7,7 @@ import { useRouter } from 'next/router'
 import MyPopover from '../my-popover/MyPopover'
 import { getCategories } from '@/store/reducers/navbarSlice'
 import PopupSearch from '../popup-search/PopupSearch'
+import Logo from '../../assets/images/icon.png'
 
 type NavBarLink = {
   text: string
@@ -124,7 +125,7 @@ const TheNavBar = () => {
           href={'/'}
           className="justify-self-center lg:justify-self-start font-bold text-2xl text-primary cursor-pointer"
         >
-          Logo
+          <Image src={Logo} alt="logo" className="h-10 w-32 object-contain" />
         </Link>
         {!isInAdminPage && (
           <ul className="hidden lg:flex h-full justify-self-center">

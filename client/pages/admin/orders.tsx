@@ -105,10 +105,12 @@ const COLUMNS: Column[] = [
     title: 'Số lượng sản phẩm',
     width: 170,
     minWidth: 170,
-    template: (rowData: any) => {
+    template: (rowData: Order) => {
       return (
         <>
-          <div className="text-right">{rowData.products.length}</div>
+          <div className="text-right">
+            {rowData.products.reduce((prev, curr) => prev + curr.amount, 0)}
+          </div>
         </>
       )
     },

@@ -11,9 +11,8 @@ const TheFooter = () => {
             Về chúng tôi
           </h3>
           <div className="text-gray-400 text-justify mb-5 text-sm">
-            Công ty CP Việt Hưng tự hào là một trong những doanh nghiệp có sự phát triển vượt bậc
-            trong năm 2021. Đồng thời cũng là một trong những công ty đi đầu cả nước về xe thân
-            thiện với môi trường.
+            Tạp hóa hòa phát tự hào là một trong những doanh nghiệp có sự phát triển vượt bậc trong
+            năm 2021. Đồng thời cũng là một trong những công ty đi đầu cả nước về bán hàng tạp hóa.
           </div>
           <ul className="flex text-gray-400 text-lg gap-x-3">
             <li className="cursor-pointer hover:text-primary transition-colors duration-300">
@@ -36,8 +35,8 @@ const TheFooter = () => {
             Liên hệ với chúng tôi
           </h3>
           <div className="text-gray-400 text-justify mb-5 text-sm">
-            Hiện tại trụ sở chính của công ty đang nằm tại Cầu Giấy, Hà Nội. Quý khách hàng có thể
-            ghé thăm để lựa chọn những mẫu xe và trải nghiệm dịch vụ bên công ty cung cấp.
+            Hiện tại cửa hàng tạp hóa đang nằm tại Cầu Giấy, Hà Nội. Quý khách hàng có thể ghé thăm
+            để lựa chọn sản phẩm và trải nghiệm dịch vụ của cửa hàng.
           </div>
           <div>
             <h4 className="text-lg font-medium text-primary mb-2">Địa chỉ:</h4>
@@ -49,7 +48,7 @@ const TheFooter = () => {
             <div className="text-gray-400 text-justify text-sm">
               Email:{' '}
               <span className="cursor-pointer text-gray-100 hover:text-primary transition-colors">
-                muabanoto@gmail.com
+                taphoahoaphat@gmail.com
               </span>
             </div>
           </div>
@@ -93,7 +92,7 @@ const TheFooter = () => {
       </div>
 
       <div className="text-sm text-gray-400 py-10 mt-5 border-t border-gray-400 border-solid text-center">
-        @2022 MuaBanOto
+        @2023 TapHoaHoaPhat
       </div>
     </div>
   )

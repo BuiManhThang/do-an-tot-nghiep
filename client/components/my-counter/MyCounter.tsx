@@ -12,9 +12,9 @@ type Props = {
 const MyCounter = ({ id, name, value, min, max, onChange }: Props) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (typeof onChange !== 'function') return
-    console.log(e.target.value)
-    if (e.target.value === '') onChange(min || 0)
-    else onChange(parseInt(e.target.value))
+    if (e.target.value === '') return onChange(min || 0)
+    if (typeof max === 'number' && parseInt(e.target.value) > max) return onChange(max)
+    onChange(parseInt(e.target.value))
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

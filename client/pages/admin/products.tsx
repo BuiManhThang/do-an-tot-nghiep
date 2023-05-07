@@ -103,7 +103,7 @@ const COLUMNS: Column[] = [
     dataType: TableDataType.Text,
     align: TableAlign.Right,
     fieldName: 'amount',
-    title: 'Hiện có',
+    title: 'SL trong kho',
     width: 150,
     minWidth: 150,
   },

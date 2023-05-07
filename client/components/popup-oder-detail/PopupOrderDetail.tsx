@@ -14,6 +14,7 @@ import MyPopup from '../my-popup/MyPopup'
 import MyPopupConfirm from '../my-popup/MyPopupConfirm'
 import UserInfo from '../user-info/UserInfo'
 import { handleClientError } from '@/common/errorHandler'
+import { AxiosError } from 'axios'
 
 const HEADERS: Header[] = [
   {
@@ -127,12 +128,16 @@ const PopupOrderDetail = ({
       setIsLoadingCancelOrder(false)
       setIsActivePopupCancelOrder(false)
       onClose(true)
-    } catch (error) {
+    } catch (error: AxiosError | any) {
       setIsLoadingCancelOrder(false)
       setIsActivePopupCancelOrder(false)
-      handleClientError(error)
+      const clientError = handleClientError(error)
+      let msg = 'Có lỗi xảy ra'
+      if (clientError.product) {
+        msg = clientError.product
+      }
       openToast({
-        msg: 'Có lỗi xảy ra',
+        msg,
         type: ToastMsgType.Danger,
       })
       setIsLoadingCancelOrder(false)
@@ -304,6 +309,13 @@ const PopupOrderDetail = ({
                       }}
                       text="Xác nhận đơn hàng"
                       onClick={() => {
+                        if (orderDetail.products.some((p) => p.amount > p.amountInSystem)) {
+                          openToast({
+                            msg: 'Số lượng mua vượt quá số lượng trong kho',
+                            type: ToastMsgType.Danger,
+                          })
+                          return
+                        }
                         setIsActivePopupCancelOrder(true)
                         setIsConfirm(true)
                       }}

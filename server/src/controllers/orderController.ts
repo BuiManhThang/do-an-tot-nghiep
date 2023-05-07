@@ -296,7 +296,10 @@ export default class OrderController extends BaseController {
       if (model.status !== OrderStatus.Pending) {
         return this.success(res, {
           ...model,
-          products: model.orderDetails.map((orderDetail) => orderDetail.product),
+          products: model.orderDetails.map((orderDetail) => ({
+            ...orderDetail.product,
+            amount: orderDetail.amount,
+          })),
         })
       }
 

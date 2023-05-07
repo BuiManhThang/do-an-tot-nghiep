@@ -22,6 +22,7 @@ import { removeCart } from '@/store/reducers/cartSlice'
 import { setUserInfo } from '@/store/reducers/userSlice'
 import { Product } from '@/types/product'
 import { ProductInCart } from '@/types/user'
+import { handleClientError } from '@/common/errorHandler'
 
 export type Header = {
   text: string
@@ -189,8 +190,13 @@ const Cart = () => {
       })
     } catch (error) {
       console.log(error)
+      const clientError = handleClientError(error)
+      let msg = 'Đặt hàng thất bại'
+      if (clientError.product) {
+        msg = clientError.product
+      }
       openToast({
-        msg: 'Đặt hàng thất bại',
+        msg,
         type: ToastMsgType.Danger,
       })
     } finally {

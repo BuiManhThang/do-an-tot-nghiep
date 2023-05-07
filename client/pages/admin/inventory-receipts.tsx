@@ -84,7 +84,11 @@ const COLUMNS: Column[] = [
     template: (rowData: InventoryReceipt) => {
       return (
         <>
-          <div className="text-right">{rowData.inventoryReceiptDetails.length}</div>
+          <div className="text-right">
+            {rowData.inventoryReceiptDetails.reduce((prev, curr) => {
+              return prev + curr.amount
+            }, 0)}
+          </div>
         </>
       )
     },

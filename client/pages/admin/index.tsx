@@ -27,6 +27,8 @@ import ChartDataLabels from 'chartjs-plugin-datalabels'
 import MyTextField from '@/components/my-text-field/MyTextField'
 import { writeFile, utils } from 'xlsx'
 import MyButton from '@/components/my-button/MyButton'
+import { PagingResult } from '@/types/paging'
+import { Product } from '@/types/product'
 
 ChartJS.register(
   CategoryScale,
@@ -132,6 +134,7 @@ const AdminPage = () => {
   })
   const [selectedEndDate, setSelectedEndDate] = useState(convertDate(lastDayInMonth, 'yyyy-MM-dd'))
   const [selectedSortDirection, setSelectedSortDirection] = useState('desc')
+  const [selectedSortDirectionInventory, setSelectedSortDirectionInventory] = useState('desc')
   const [selectedSort, setSelectedSort] = useState('amount')
   const [options, setOptions] = useState({
     responsive: true,
@@ -235,6 +238,16 @@ const AdminPage = () => {
       },
     ],
   })
+  const [dataProductInventory, setDataProductInventory] = useState({
+    labels: PRODUCT_LABELS,
+    datasets: [
+      {
+        label: 'Số lượng trong kho',
+        data: [0],
+        backgroundColor: PRODUCT_COLORS,
+      },
+    ],
+  })
   const [totalProducts, setTotalProducts] = useState(0)
   const [totalUsers, setTotalUsers] = useState(0)
   const [totalOrders, setTotalOrders] = useState(0)
@@ -246,24 +259,36 @@ const AdminPage = () => {
   useEffect(() => {
     const getInitData = async () => {
       try {
-        const [totalResultRes, statisticalRevenueRes, statisticalRevenueProductsRes] =
-          await Promise.all([
-            baseApi.get('/report/total'),
-            baseApi.get('/report/statistical-revenue?month=true'),
-            baseApi.get('/report/statistical-revenue-products', {
-              pageIndex: 1,
-              pageSize: 10,
-              startDate: '2023-05-01',
-              endDate: '2023-05-31',
-              sort: 'amount',
-              direction: 'desc',
-            }),
-          ])
+        const [
+          totalResultRes,
+          statisticalRevenueRes,
+          statisticalRevenueProductsRes,
+          productInventoryRes,
+        ] = await Promise.all([
+          baseApi.get('/report/total'),
+          baseApi.get('/report/statistical-revenue?month=true'),
+          baseApi.get('/report/statistical-revenue-products', {
+            pageIndex: 1,
+            pageSize: 10,
+            startDate: '2023-05-01',
+            endDate: '2023-05-31',
+            sort: 'amount',
+            direction: 'desc',
+          }),
+          baseApi.get('/products/paging', {
+            pageIndex: 1,
+            pageSize: 10,
+            sort: 'amount',
+            direction: 'desc',
+          }),
+        ])
 
         const totalResult: TotalResult = totalResultRes.data
         const statisticalRevenueResult: StatisticalRevenueResult[] = statisticalRevenueRes.data
         const statisticalRevenueProductsResult: StatisticalRevenueProductResult[] =
           statisticalRevenueProductsRes.data
+        const productInventoryPaging: PagingResult = productInventoryRes.data
+        const productInventory: Product[] = productInventoryPaging.data
         setTotalProducts(totalResult.productsCount)
         setTotalUsers(totalResult.usersCount)
         setTotalOrders(totalResult.ordersCount)
@@ -301,6 +326,22 @@ const AdminPage = () => {
             {
               ...prev.datasets[0],
               data: statisticalRevenueProductsResult.map((s) => s.sellAmount),
+            },
+          ],
+        }))
+        setDataProductInventory((prev) => ({
+          ...prev,
+          labels: productInventory.map((s) => {
+            const name = `${s.code} - ${s.name}`
+            if (name.length > 23) {
+              return `${name.slice(0, 23)}...`
+            }
+            return name
+          }),
+          datasets: [
+            {
+              ...prev.datasets[0],
+              data: productInventory.map((s) => s.amount),
             },
           ],
         }))
@@ -486,6 +527,38 @@ const AdminPage = () => {
     }))
   }
 
+  const handleChangeSortDirectionProductInventory = async (
+    e: number | string | undefined | null | boolean
+  ) => {
+    if (!e) return
+    const newVal = e?.toString() || ''
+    setSelectedSortDirectionInventory(newVal)
+    const productInventoryRes = await baseApi.get('/products/paging', {
+      pageIndex: 1,
+      pageSize: 10,
+      sort: 'amount',
+      direction: newVal,
+    })
+    const productInventoryPaging: PagingResult = productInventoryRes.data
+    const productInventory: Product[] = productInventoryPaging.data
+    setDataProductInventory((prev) => ({
+      ...prev,
+      labels: productInventory.map((s) => {
+        const name = `${s.code} - ${s.name}`
+        if (name.length > 23) {
+          return `${name.slice(0, 23)}...`
+        }
+        return name
+      }),
+      datasets: [
+        {
+          ...prev.datasets[0],
+          data: productInventory.map((s) => s.amount),
+        },
+      ],
+    }))
+  }
+
   const handleChangeSortDirection = (e: number | string | undefined | null | boolean) => {
     if (!e) return
     const newVal = e?.toString() || ''
@@ -621,6 +694,52 @@ const AdminPage = () => {
     utils.sheet_add_json(ws, data, { skipHeader: true, origin: 'A7' })
     utils.book_append_sheet(wb, ws, 'Thong_ke_theo_san_pham')
     writeFile(wb, 'Thong_ke_theo_san_pham.xlsx')
+  }
+
+  const handleExportProductInventory = async () => {
+    const productInventoryRes = await baseApi.get('/products/paging', {
+      sort: 'amount',
+      direction: selectedSortDirectionInventory,
+    })
+    const productInventoryPaging: PagingResult = productInventoryRes.data
+    const productInventory: Product[] = productInventoryPaging.data
+    const headers = [['STT', 'Mã sản phẩm', 'Tên sản phẩm', 'SL trong kho', 'Đơn vị', 'Giá bán']]
+    const wb = utils.book_new()
+    const data = productInventory.map((r, idx) => ({
+      rowNumber: idx + 1,
+      code: r.code,
+      name: r.name,
+      amount: r.amount,
+      unit: r.unit,
+      price: r.price,
+    }))
+    const wscols = [
+      { wpx: 40 },
+      { wpx: 100 },
+      { wpx: 250 },
+      { wpx: 100 },
+      { wpx: 100 },
+      { wpx: 100 },
+    ]
+    const merge = [
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 2 } },
+      { s: { r: 3, c: 3 }, e: { r: 3, c: 7 } },
+    ]
+    const ws = utils.json_to_sheet([])
+    ws['!cols'] = wscols
+    ws['!merges'] = merge
+    utils.sheet_add_aoa(ws, [['Thống kê số lượng hàng trong kho']], { origin: 'A2' })
+
+    const sortDirection = selectedSortDirectionInventory === 'desc' ? 'Giảm dần' : 'Tăng dần'
+
+    utils.sheet_add_aoa(ws, [[`Sắp xếp theo: Số lượng trong kho - ${sortDirection}`]], {
+      origin: 'A4',
+    })
+    utils.sheet_add_aoa(ws, headers, { origin: 'A6' })
+    utils.sheet_add_json(ws, data, { skipHeader: true, origin: 'A7' })
+    utils.book_append_sheet(wb, ws, 'Thong_ke_so_luong_trong_kho')
+    writeFile(wb, 'Thong_ke_so_luong_trong_kho.xlsx')
   }
 
   return (
@@ -770,7 +889,7 @@ const AdminPage = () => {
             />
           </div>
         </div>
-        <div className="shrink-0 mt-6 h-[700px] w-full bg-white rounded-md p-4 flex flex-col items-center mb-4">
+        <div className="shrink-0 h-[700px] w-full bg-white rounded-md p-4 flex flex-col items-center mb-4">
           <div className="relative h-9 flex items-center justify-between w-full mb-4">
             <div className="text-2xl font-medium leading-none text-left">
               Thống kê sản phẩm bán ra
@@ -887,6 +1006,52 @@ const AdminPage = () => {
                 },
               }}
               data={dataProduct}
+            />
+          </div>
+        </div>
+        <div className="shrink-0 h-[700px] w-full bg-white rounded-md p-4 flex flex-col items-center mb-4">
+          <div className="relative h-9 flex items-center justify-between w-full mb-4">
+            <div className="text-2xl font-medium leading-none text-left">
+              Thống kê số lượng hàng trong kho
+            </div>
+            <div className="flex items-center gap-x-3">
+              <div className="w-64">
+                <MySelect
+                  id="sort-direction-product-inventory"
+                  name="sort-direction-product-inventory"
+                  options={SORT_DIRECTION_OPTIONS}
+                  value={selectedSortDirectionInventory}
+                  label="Hướng sắp xếp"
+                  isHorizontal={true}
+                  onChange={handleChangeSortDirectionProductInventory}
+                />
+              </div>
+              <MyButton text="Xuất khẩu" onClick={() => handleExportProductInventory()} />
+            </div>
+          </div>
+          <div className="h-[600px] w-full">
+            <Bar
+              height={100}
+              width={100}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: {
+                    display: false,
+                  },
+                  title: {
+                    display: false,
+                  },
+                  datalabels: {
+                    color: '#000',
+                    font: {
+                      size: 14,
+                    },
+                  },
+                },
+                maintainAspectRatio: false,
+              }}
+              data={dataProductInventory}
             />
           </div>
         </div>
