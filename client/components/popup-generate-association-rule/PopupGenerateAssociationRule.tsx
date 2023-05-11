@@ -109,10 +109,13 @@ const PopupGenerateAssociationRule = ({ isActive = false, onClose, onSave }: Pro
     setIsLoadingSave(true)
     let isSuccess = false
     try {
-      const res = await axios.post('http://127.0.0.1:8000/api/v1/recommend-service', {
-        min_support: associationRuleData.min_support,
-        min_confidence: associationRuleData.min_confidence,
-      })
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_RECOMMEND_SERVICE_URL}recommend-service`,
+        {
+          min_support: associationRuleData.min_support,
+          min_confidence: associationRuleData.min_confidence,
+        }
+      )
       if (res.data === false) {
         isSuccess = false
         openToast({
