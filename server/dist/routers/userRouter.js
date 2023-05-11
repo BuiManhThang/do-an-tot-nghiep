@@ -1,0 +1,24 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const userController_1 = __importDefault(require("../controllers/userController"));
+const authorize_1 = require("../common/authorize");
+const userController = new userController_1.default();
+const userRouter = (0, express_1.Router)();
+userRouter.get('/paging', authorize_1.authorizeAdmin, userController.getPaging);
+userRouter.get('/current-user', authorize_1.authorize, userController.getCurrentUser);
+userRouter.get('/new-code', authorize_1.authorizeAdmin, userController.getNewCode);
+userRouter.get('/:id', authorize_1.authorizeAdmin, userController.getById);
+userRouter.get('/', authorize_1.authorizeAdmin, userController.getAll);
+userRouter.post('/register', userController.register);
+userRouter.post('/sign-in', userController.signIn);
+userRouter.post('/sign-out', userController.signOut);
+userRouter.post('/mail-reset-password', userController.sendMailResetPassword);
+userRouter.post('/reset-password', authorize_1.authorizeResetPassword, userController.resetPassword);
+userRouter.post('/', authorize_1.authorizeAdmin, userController.create);
+userRouter.put('/:id', userController.update);
+userRouter.delete('/:id', authorize_1.authorizeAdmin, userController.delete);
+exports.default = userRouter;

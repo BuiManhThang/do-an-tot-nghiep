@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { Response } from 'express'
 import morgan from 'morgan'
 import dotenv from 'dotenv'
 import cors from 'cors'
@@ -39,6 +39,8 @@ app.use('/api/v1/reviews', reviewRouter)
 app.use('/api/v1/viewHistory', viewHistoryRouter)
 app.use('/api/v1/associationRules', associationRuleRouter)
 app.use('/api/v1/report', reportRouter)
+
+app.get('/ping', (_, res: Response) => res.json({ msg: 'hello' }))
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`)
