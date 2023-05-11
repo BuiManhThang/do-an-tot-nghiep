@@ -20,7 +20,7 @@ const ProductCard = ({ product }: Props) => {
 
   const handleClickAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
-    const addedProduct: ProductInCart = {
+    const addedProduct = {
       amount: 1,
       id: product.id,
       name: product.name,
