@@ -19,9 +19,18 @@ from config import Settings
 
 app = FastAPI()
 
-origins = [
-  "http://localhost:3000",
-]
+@lru_cache()
+def get_settings():
+  return Settings()
+
+
+def get_origins(settings: Annotated[Settings, Depends(get_settings)]):
+  return [settings.client_url]
+
+
+origins = get_origins(get_settings())
+
+print(origins)
 
 app.add_middleware(
   CORSMiddleware,
@@ -30,10 +39,6 @@ app.add_middleware(
   allow_methods=["*"],
   allow_headers=["*"],
 )
-
-@lru_cache()
-def get_settings():
-  return Settings()
 
 
 def get_database(connection_string):

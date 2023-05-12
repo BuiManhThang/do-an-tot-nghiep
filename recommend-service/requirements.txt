@@ -3,3 +3,4 @@ bson
 pymongo
 pandas
 mlxtend
+uvicorn[standard]
