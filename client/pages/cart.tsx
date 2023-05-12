@@ -176,14 +176,15 @@ const Cart = () => {
   }
 
   const handleClickMakeOrder = () => {
-    if (!isAgree) {
-      setIsActivePopupInfo(true)
-      setMsgPopupInfo('Bạn cần đồng ý với chính sách và điều khoản của website')
-      return
-    }
     if (!userInfo) {
       setIsActivePopupInfo(true)
       setMsgPopupInfo('Bạn cần đăng nhập trước khi đặt hàng')
+      return
+    }
+    if (!validate(orderData)) return
+    if (!isAgree) {
+      setIsActivePopupInfo(true)
+      setMsgPopupInfo('Bạn cần đồng ý với chính sách và điều khoản của website')
       return
     }
     if (productsWithAmount.some((p) => p.amount > p.amountInSystem)) {
