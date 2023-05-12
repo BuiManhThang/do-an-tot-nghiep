@@ -197,22 +197,27 @@ const ProductDetailPage = () => {
                         value={buyNumber}
                         min={1}
                         max={productData?.amount}
+                        disabled={!productData?.amount || !productData.isActive}
                         onChange={(e: '' | number) => setBuyNumber(e ? e : 0)}
                       />
                     </div>
                   </div>
 
                   <div className="mt-6">
-                    <MyButton
-                      startIcon={<i className="fa-solid fa-cart-plus"></i>}
-                      text="Thêm vào giỏ hàng"
-                      onClick={handleClickAddToCart}
-                      style={{
-                        fontSize: '18px',
-                        fontWeight: 'bold',
-                        height: '56px',
-                      }}
-                    />
+                    {productData?.amount ? (
+                      <MyButton
+                        startIcon={<i className="fa-solid fa-cart-plus"></i>}
+                        text="Thêm vào giỏ hàng"
+                        onClick={handleClickAddToCart}
+                        style={{
+                          fontSize: '18px',
+                          fontWeight: 'bold',
+                          height: '56px',
+                        }}
+                      />
+                    ) : (
+                      <div className="text-lg font-bold text-danger">Sản phẩm ngừng kinh doanh</div>
+                    )}
                   </div>
                 </div>
               )}

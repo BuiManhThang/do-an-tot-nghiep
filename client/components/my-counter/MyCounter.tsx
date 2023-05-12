@@ -6,10 +6,11 @@ type Props = {
   value: '' | number
   min?: number
   max?: number
+  disabled?: boolean
   onChange?: (e: number | '') => void
 }
 
-const MyCounter = ({ id, name, value, min, max, onChange }: Props) => {
+const MyCounter = ({ id, name, value, min, max, onChange, disabled = false }: Props) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (typeof onChange !== 'function') return
     if (e.target.value === '') return onChange(min || 0)
@@ -52,6 +53,7 @@ const MyCounter = ({ id, name, value, min, max, onChange }: Props) => {
         value={value}
         min={min}
         step={1}
+        disabled={disabled}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
       />

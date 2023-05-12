@@ -65,6 +65,12 @@ export type Order = {
   totalMoney: number
   userId: string
   user: User
+  userName: string
+  userPhoneNumber: string
+  userEmail: string
+  userCity: string
+  userDistrict: string
+  userAddressDetail: string
   orderDetails: OrderDetail[]
   createdAt: Date
   updatedAt: Date

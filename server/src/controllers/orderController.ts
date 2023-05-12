@@ -12,13 +12,18 @@ import {
 } from '../models/dto'
 import { OrderStatus } from '../models/enum'
 import { sendMail } from '../common/mailService'
-import { numberWithCommas } from '../common/format'
+import { convertDate, numberWithCommas } from '../common/format'
 
 type OrderSendMail = {
   code: string
   createdAt: Date
   userName: string
   userEmail: string
+  userPhoneNumber: string
+  userCity: string
+  userDistrict: string
+  userAddressDetail: string
+  note?: string
   products: ProductInOrder[]
   totalMoney: number
 }
@@ -32,6 +37,35 @@ export default class OrderController extends BaseController {
     this.prisma = new PrismaClient()
     this.model = this.prisma.order
     this.codePrefix = 'O'
+  }
+
+  updateCustom = async (_: Request, res: Response) => {
+    try {
+      const orders = await this.model.findMany({
+        include: {
+          user: true,
+        },
+      })
+      const requestList = orders.map((order) => {
+        return this.model.update({
+          where: {
+            id: order.id,
+          },
+          data: {
+            userName: order.user.name,
+            userPhoneNumber: order.user.phoneNumber || '',
+            userEmail: order.user.email,
+            userCity: order.user.address?.city || '',
+            userDistrict: order.user.address?.district || '',
+            userAddressDetail: order.user.address?.detail || '',
+          },
+        })
+      })
+      await Promise.all(requestList)
+      return this.success(res, true)
+    } catch (error) {
+      return this.serverError(res, error)
+    }
   }
 
   create = async (req: Request, res: Response) => {
@@ -62,6 +96,26 @@ export default class OrderController extends BaseController {
         ]
         return this.clientError(res, errors)
       }
+      const nameInActiveProducts: string[] = []
+      entity.products.forEach((product) => {
+        const foundProduct = products.find((p) => p.id === product.id)
+        if (!foundProduct) return
+        if (!foundProduct.isActive) {
+          nameInActiveProducts.push(`${foundProduct.code} - ${foundProduct.name}`)
+        }
+      })
+      if (nameInActiveProducts.length) {
+        const errors: ValidateError[] = [
+          {
+            field: 'product',
+            msg: `Các sản phẩm sau đã ngừng kinh doanh: ${nameInActiveProducts.join(
+              ', '
+            )}. Hãy xóa khỏi giỏ hàng`,
+            value: null,
+          },
+        ]
+        return this.clientError(res, errors)
+      }
 
       entity.code = await this.genereateNewCode()
       const detailOrders: CreateOrderDetailDto[] = entity.products.map((product) => ({
@@ -76,6 +130,12 @@ export default class OrderController extends BaseController {
           note: entity.note,
           totalMoney: entity.totalMoney,
           userId: entity.userId,
+          userName: entity.userName,
+          userPhoneNumber: entity.userPhoneNumber,
+          userEmail: entity.userEmail,
+          userCity: entity.userCity,
+          userDistrict: entity.userDistrict,
+          userAddressDetail: entity.userAddressDetail,
           orderDetails: {
             createMany: {
               data: detailOrders,
@@ -136,6 +196,24 @@ export default class OrderController extends BaseController {
       if (!entity.userId) {
         entity.userId = model.userId
       }
+      if (!entity.userName) {
+        entity.userName = model.userName
+      }
+      if (!entity.userPhoneNumber) {
+        entity.userPhoneNumber = model.userPhoneNumber
+      }
+      if (!entity.userEmail) {
+        entity.userEmail = model.userEmail
+      }
+      if (!entity.userCity) {
+        entity.userCity = model.userCity
+      }
+      if (!entity.userDistrict) {
+        entity.userDistrict = model.userDistrict
+      }
+      if (!entity.userAddressDetail) {
+        entity.userAddressDetail = model.userAddressDetail
+      }
 
       const productOfOrders: { id: string; amount: number }[] = model.orderDetails.map(
         (orderDetail) => {
@@ -182,6 +260,12 @@ export default class OrderController extends BaseController {
           note: entity.note,
           status: entity.status,
           totalMoney: entity.totalMoney,
+          userName: entity.userName,
+          userPhoneNumber: entity.userPhoneNumber,
+          userEmail: entity.userEmail,
+          userCity: entity.userCity,
+          userDistrict: entity.userDistrict,
+          userAddressDetail: entity.userAddressDetail,
           userId: entity.userId,
         },
       })
@@ -209,8 +293,12 @@ export default class OrderController extends BaseController {
           code: updatedEntity.code,
           createdAt: updatedEntity.createdAt,
           totalMoney: updatedEntity.totalMoney,
-          userName: updatedEntity.user.name,
-          userEmail: updatedEntity.user.email,
+          userName: updatedEntity.userName,
+          userEmail: updatedEntity.userEmail,
+          userPhoneNumber: updatedEntity.userPhoneNumber,
+          userCity: updatedEntity.userCity,
+          userDistrict: updatedEntity.userDistrict,
+          userAddressDetail: updatedEntity.userAddressDetail,
           products: entity.products,
         }
 
@@ -400,7 +488,19 @@ export default class OrderController extends BaseController {
           where,
           skip,
           take,
-          orderBy: sort === 'products' ? { orderDetails: { _count: direction } } : orderBy,
+          orderBy:
+            sort === 'products'
+              ? { orderDetails: { _count: direction } }
+              : orderBy
+              ? sort !== 'createdAt'
+                ? [
+                    orderBy,
+                    {
+                      createdAt: 'desc',
+                    },
+                  ]
+                : orderBy
+              : undefined,
         }),
         this.model.count({
           where,
@@ -435,58 +535,41 @@ export default class OrderController extends BaseController {
   private sendMailToUser = async (order: OrderSendMail) => {
     try {
       const htmlString = `
-      <h1>Xác nhận đơn hàng của bạn</h1>
-      <table>
-      <style>
-        table {
-          border: 1px solid #000;
-          width: 600px;
-          border-collapse: separate;
-          border-spacing: 0;
-        }
-        table thead tr th {
-          border-bottom: 1px solid #000;
-          border-right: 1px solid #000;
-          padding: 0 10px;
-        }
-        table tbody tr td {
-          border-bottom: 1px solid #000;
-          border-right: 1px solid #000;
-          padding: 0 10px;
-        }
-        table thead tr th:last-child {
-          border-right: none;
-          text-align: right;
-        }
-        table tbody tr td:last-child {
-          border-right: none;
-          text-align: right;
-        }
-        table tbody tr:last-child td {
-          border-bottom: none;
-        }
-        table tbody tr td:first-child {
-          text-align: center;
-        }
-        table tbody tr td:nth-child(2) {
-          text-align: left;
-        }
-        table thead tr th:nth-child(2) {
-          text-align: left;
-        }
-        table tbody tr td:nth-child(3) {
-          text-align: left;
-        }
-        table thead tr th:nth-child(3) {
-          text-align: left;
-        }
-        table tbody tr td:nth-child(4) {
-          text-align: right;
-        }
-        table thead tr th:nth-child(4) {
-          text-align: right;
-        }
-      </style>
+      <div
+        style="height: 60px; width: 600px; background-color: #2563eb; color: #fff; text-align: center; line-height: 60px; margin-bottom: 20px;">
+        <h1>Cảm ơn bạn đã mua hàng</h1>
+      </div>
+
+      <div style="width: 600px; margin-bottom: 20px; box-sizing: border-box;">
+        <div style="display: flex; margin-bottom: 10px; box-sizing: border-box;">
+          <div style="display: inline-block; width: 300px; padding-right: 10px; box-sizing: border-box;">
+            <strong>Mã đơn:</strong> ${order.code}
+          </div>
+          <div style="display: inline-block; width: 300px; box-sizing: border-box;">
+            <strong>Ngày lập:</strong> ${convertDate(order.createdAt)}
+          </div>
+        </div>
+        <div style="display: flex; margin-bottom: 10px; box-sizing: border-box;">
+          <div style="display: inline-block; width: 300px; padding-right: 10px; box-sizing: border-box;">
+            <strong>Họ tên:</strong> ${order.userName}
+          </div>
+          <div style="display: inline-block; width: 300px; box-sizing: border-box;">
+            <strong>SĐT:</strong> ${order.userPhoneNumber}
+          </div>
+        </div>
+        <div style="display: flex; margin-bottom: 10px; box-sizing: border-box;">
+          <div style="display: inline-block; width: 300px; padding-right: 10px; box-sizing: border-box;">
+            <strong>Tỉnh/Thành phố:</strong> ${order.userCity}
+          </div>
+          <div style="display: inline-block; width: 300px; box-sizing: border-box;">
+            <strong>Quận/Huyện:</strong> ${order.userDistrict}
+          </div>
+        </div>
+        <div style="grid-column-start: 1; grid-column-end: 3; box-sizing: border-box;">
+          <strong>Địa chỉ chi tiết:</strong> ${order.userAddressDetail}
+        </div>
+      </div>
+      <table style="border-top: 1px solid #000; border-left: 1px solid #000; border-right: 1px solid #000; width: 600px; border-collapse: separate; border-spacing: 0;">
         <colgroup>
           <col style="width: 50px;" />
           <col style="width: 250px;" />
@@ -496,11 +579,11 @@ export default class OrderController extends BaseController {
         </colgroup>
         <thead>
           <tr>
-            <th>STT</th>
-            <th>Tên sản phẩm</th>
-            <th>Đơn vị</th>
-            <th>Đơn giá</th>
-            <th>Số lượng</th>
+            <th style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: center; background-color: #2563eb; color: #fff;">STT</th>
+            <th style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: left; background-color: #2563eb; color: #fff;">Tên sản phẩm</th>
+            <th style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: left; background-color: #2563eb; color: #fff;">Đơn vị</th>
+            <th style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: right; background-color: #2563eb; color: #fff;">Đơn giá</th>
+            <th style="border-bottom: 1px solid #000; padding: 0 10px; text-align: right; background-color: #2563eb; color: #fff;">Số lượng</th>
           </tr>
         </thead>
         <tbody>
@@ -508,11 +591,21 @@ export default class OrderController extends BaseController {
             .map((product, index) => {
               return `
               <tr>
-                <td>${index + 1}</td>
-                <td>${product.name}</td>
-                <td>${product.unit}</td>
-                <td>${numberWithCommas(product.price)}</td>
-                <td>${product.amount}</td>
+                <td style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: center;">${
+                  index + 1
+                }</td>
+                <td style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: left;">${
+                  product.name
+                }</td>
+                <td style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: left;">${
+                  product.unit
+                }</td>
+                <td style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: right;">${numberWithCommas(
+                  product.price
+                )}</td>
+                <td style="border-bottom: 1px solid #000; padding: 0 10px; text-align: right;">${
+                  product.amount
+                }</td>
               </tr>
               `
             })
@@ -520,9 +613,12 @@ export default class OrderController extends BaseController {
         </tbody>
       </table>
       
-      <div style="margin-top: 20px;">
-        <span>Thành tiền: </span>
-        <span style="font-weight: 700;">${numberWithCommas(order.totalMoney)}đ</span>
+      <div style="margin-top: 20px; width: 600px">
+        <strong>Thành tiền:</strong>
+        <strong>${numberWithCommas(order.totalMoney)}đ</strong>
+      </div>
+      <div style="width: 600px; margin-top: 10px;">
+        <strong>Ghi chú:</strong> ${order.note || ''}
       </div>`
 
       await sendMail(order.userEmail, 'Xác nhận đơn hàng', htmlString)

@@ -9,6 +9,12 @@ export type Order = {
   totalMoney: number
   userId: string
   user: User
+  userName: string
+  userPhoneNumber: string
+  userEmail: string
+  userCity: string
+  userDistrict: string
+  userAddressDetail: string
   products: ProductInOrder[]
   createdAt: Date
   updatedAt: Date
@@ -19,5 +25,11 @@ export type CreateOrder = {
   note?: string
   totalMoney: number
   userId: string
+  userName: string | ''
+  userPhoneNumber: string | ''
+  userEmail: string | ''
+  userCity: string | ''
+  userDistrict: string | ''
+  userAddressDetail: string | ''
   products: ProductInOrder[]
 }

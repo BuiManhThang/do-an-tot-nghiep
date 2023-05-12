@@ -249,10 +249,18 @@ const PopupOrderDetail = ({
             >
               {orderDetail && (
                 <UserInfo
-                  userName={orderDetail?.user?.name}
-                  userAddress={orderDetail?.user?.address}
-                  userEmail={orderDetail?.user?.email}
-                  userPhoneNumber={orderDetail?.user?.phoneNumber}
+                  userName={orderDetail?.userName}
+                  userAddress={
+                    orderDetail
+                      ? {
+                          city: orderDetail.userCity,
+                          district: orderDetail.userDistrict,
+                          detail: orderDetail.userAddressDetail,
+                        }
+                      : undefined
+                  }
+                  userEmail={orderDetail?.userEmail}
+                  userPhoneNumber={orderDetail?.userPhoneNumber}
                   note={orderDetail?.note}
                   orderCreatedAt={orderDetail?.createdAt}
                   orderCode={orderDetail?.code}

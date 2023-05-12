@@ -168,6 +168,12 @@ export type CreateOrderDto = {
   note?: string
   totalMoney: number
   userId: string
+  userName: string
+  userPhoneNumber: string
+  userEmail: string
+  userCity: string
+  userDistrict: string
+  userAddressDetail: string
   products: ProductInOrder[]
 }
 
@@ -184,6 +190,12 @@ export type UpdateOrderDto = {
   status: OrderStatus
   totalMoney: number
   userId: string
+  userName: string
+  userPhoneNumber: string
+  userEmail: string
+  userCity: string
+  userDistrict: string
+  userAddressDetail: string
   products: ProductInOrder[]
 }
 

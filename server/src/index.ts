@@ -17,8 +17,6 @@ const PORT = process.env.PORT || 3001
 const CLIENT_URL = process.env.CLIENT_URL
 const app = express()
 
-console.log(CLIENT_URL)
-
 // Middlewares
 app.use(morgan('dev'))
 app.use(

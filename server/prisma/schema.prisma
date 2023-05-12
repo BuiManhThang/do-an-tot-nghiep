@@ -68,17 +68,23 @@ model Category {
 }
 
 model Order {
-  id           String        @id @default(auto()) @map("_id") @db.ObjectId
-  code         String        @unique
-  status       Int           @default(1) // 1: Pending; 2: Confirmed; 3: Success
-  note         String?
-  totalMoney   Int
-  userId       String        @db.ObjectId
-  user         User          @relation(fields: [userId], references: [id])
-  orderDetails OrderDetail[]
-  transaction  Transaction[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id                String        @id @default(auto()) @map("_id") @db.ObjectId
+  code              String        @unique
+  status            Int           @default(1) // 1: Pending; 2: Confirmed; 3: Success
+  note              String?
+  totalMoney        Int
+  userName          String
+  userPhoneNumber   String
+  userEmail         String
+  userCity          String
+  userDistrict      String
+  userAddressDetail String
+  userId            String        @db.ObjectId
+  user              User          @relation(fields: [userId], references: [id])
+  orderDetails      OrderDetail[]
+  transaction       Transaction[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 }
 
 model OrderDetail {

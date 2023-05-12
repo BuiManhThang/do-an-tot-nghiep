@@ -23,6 +23,7 @@ import { setUserInfo } from '@/store/reducers/userSlice'
 import { Product } from '@/types/product'
 import { ProductInCart } from '@/types/user'
 import { handleClientError } from '@/common/errorHandler'
+import { ValidateRule, Validator, useValidate } from '@/hooks/validateHook'
 
 export type Header = {
   text: string
@@ -62,12 +63,46 @@ const HEADERS: Header[] = [
   },
 ]
 
+const VALIDATORS: Validator[] = [
+  {
+    field: 'userName',
+    name: 'Họ tên',
+    rules: [ValidateRule.Required],
+  },
+  {
+    field: 'userPhoneNumber',
+    name: 'Số điện thoại',
+    rules: [ValidateRule.Required],
+  },
+  {
+    field: 'userEmail',
+    name: 'Email',
+    rules: [ValidateRule.Required],
+  },
+  {
+    field: 'userCity',
+    name: 'Tỉnh/Thành phố',
+    rules: [ValidateRule.Required],
+  },
+  {
+    field: 'userDistrict',
+    name: 'Quận/Huyện',
+    rules: [ValidateRule.Required],
+  },
+  {
+    field: 'userAddressDetail',
+    name: 'Địa chỉ chi tiết',
+    rules: [ValidateRule.Required],
+  },
+]
+
 const Cart = () => {
   const router = useRouter()
   const dispatch = useAppDispatch()
   const userInfo = useAppSelector((state) => state.user.userInfo)
   const products = useAppSelector((state) => state.cart.products)
   const { openToast } = useToastMsg()
+  const { error, isValidated, validate } = useValidate(VALIDATORS)
   const [productsWithAmount, setProductsWithAmount] = useState<ProductInCart[]>([])
   const [isActivePopupConfigm, setIsActivePopupConfigm] = useState(false)
   const [isLoadingSave, setIsLoadingSave] = useState(false)
@@ -82,6 +117,12 @@ const Cart = () => {
     totalMoney: 0,
     userId: '',
     note: '',
+    userName: userInfo?.name || '',
+    userPhoneNumber: userInfo?.phoneNumber || '',
+    userEmail: userInfo?.email || '',
+    userCity: userInfo?.address?.city || '',
+    userDistrict: userInfo?.address?.district || '',
+    userAddressDetail: userInfo?.address?.detail || '',
   })
 
   useEffect(() => {
@@ -174,6 +215,12 @@ const Cart = () => {
         totalMoney: totalPrice,
         userId: userInfo?.id,
         note: orderData.note,
+        userName: orderData.userName,
+        userPhoneNumber: orderData.userPhoneNumber,
+        userEmail: orderData.userEmail,
+        userCity: orderData.userCity,
+        userDistrict: orderData.userDistrict,
+        userAddressDetail: orderData.userAddressDetail,
       })
 
       dispatch(removeCart())
@@ -203,6 +250,16 @@ const Cart = () => {
       setIsLoadingSave(false)
       setIsActivePopupConfigm(false)
     }
+  }
+
+  const handleChange = (func: (prev: CreateOrder) => CreateOrder) => {
+    return setOrderData((prev) => {
+      const newVal = func(prev)
+      if (isValidated) {
+        validate(newVal)
+      }
+      return newVal
+    })
   }
 
   return (
@@ -287,44 +344,115 @@ const Cart = () => {
               </div>
 
               <div className="py-4 px-8 rounded-md bg-white">
-                <div className="py-4">
-                  <span className="font-bold">Họ tên: </span>
-                  <span>{userInfo?.name}</span>
+                <div className="py-2">
+                  <MyTextField
+                    id="userName"
+                    name="userName"
+                    label="Họ tên"
+                    required={true}
+                    value={orderData.userName}
+                    error={error.userName}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      handleChange((prev) => ({
+                        ...prev,
+                        userName: e.target.value,
+                      }))
+                    }
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-x-6">
-                  <div className="py-4">
-                    <span className="font-bold">Số điện thoại: </span>
-                    <span>{userInfo?.phoneNumber}</span>
+                  <div className="py-2">
+                    <MyTextField
+                      id="userPhoneNumber"
+                      name="userPhoneNumber"
+                      label="Số điện thoại"
+                      required={true}
+                      value={orderData.userPhoneNumber}
+                      error={error.userPhoneNumber}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleChange((prev) => ({
+                          ...prev,
+                          userPhoneNumber: e.target.value,
+                        }))
+                      }
+                    />
                   </div>
-                  <div className="py-4">
-                    <span className="font-bold">Email: </span>
-                    <span>{userInfo?.email}</span>
+                  <div className="py-2">
+                    <MyTextField
+                      id="userEmail"
+                      name="userEmail"
+                      label="Email"
+                      required={true}
+                      value={orderData.userEmail}
+                      error={error.userEmail}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleChange((prev) => ({
+                          ...prev,
+                          userEmail: e.target.value,
+                        }))
+                      }
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-x-6">
-                  <div className="py-4">
-                    <span className="font-bold">Tỉnh/Thành phố: </span>
-                    <span>{userInfo?.address?.city}</span>
+                  <div className="py-2">
+                    <MyTextField
+                      id="userCity"
+                      name="userCity"
+                      label="Tỉnh/Thành phố"
+                      required={true}
+                      value={orderData.userCity}
+                      error={error.userCity}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleChange((prev) => ({
+                          ...prev,
+                          userCity: e.target.value,
+                        }))
+                      }
+                    />
                   </div>
-                  <div className="py-4">
-                    <span className="font-bold">Quận/Huyện: </span>
-                    <span>{userInfo?.address?.district}</span>
+                  <div className="py-2">
+                    <MyTextField
+                      id="userDistrict"
+                      name="userDistrict"
+                      label="Quận/Huyện"
+                      required={true}
+                      value={orderData.userDistrict}
+                      error={error.userDistrict}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleChange((prev) => ({
+                          ...prev,
+                          userDistrict: e.target.value,
+                        }))
+                      }
+                    />
                   </div>
                 </div>
-                <div className="py-4">
-                  <span className="font-bold">Địa chỉ chi tiết: </span>
-                  <span>{userInfo?.address?.detail}</span>
+                <div className="py-2">
+                  <MyTextField
+                    id="userAddressDetail"
+                    name="userAddressDetail"
+                    label="Địa chỉ chi tiết"
+                    required={true}
+                    value={orderData.userAddressDetail}
+                    error={error.userAddressDetail}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      handleChange((prev) => ({
+                        ...prev,
+                        userAddressDetail: e.target.value,
+                      }))
+                    }
+                  />
                 </div>
-                <div className="py-4">
+                <div className="py-2">
                   <MyTextArea
                     id="note"
                     name="note"
                     label="Ghi chú"
                     height={150}
-                    labelClassName="font-bold"
                     value={orderData.note}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                      setOrderData((prev) => ({
+                      handleChange((prev) => ({
                         ...prev,
                         note: e.target.value,
                       }))

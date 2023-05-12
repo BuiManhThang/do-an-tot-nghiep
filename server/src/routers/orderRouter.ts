@@ -5,6 +5,7 @@ import { authorizeAdmin, authorize } from '../common/authorize'
 const orderController = new OrderController()
 const orderRouter = Router()
 
+orderRouter.get('/update-custom', authorizeAdmin, orderController.updateCustom)
 orderRouter.get('/paging', orderController.getPaging)
 orderRouter.get('/new-code', authorizeAdmin, orderController.getNewCode)
 orderRouter.get('/:id', authorize, orderController.getById)

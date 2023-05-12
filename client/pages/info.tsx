@@ -20,6 +20,7 @@ import { formatMoney } from '@/common/format'
 import ImageOrdersEmpty from '../assets/images/orders-empty.jpg'
 import OrderItem from '@/components/order-item/OrderItem'
 import PopupOrderDetail from '@/components/popup-oder-detail/PopupOrderDetail'
+import MySelect, { MySelectOption } from '@/components/my-select/MySelect'
 
 const VALIDATORS: Validator[] = [
   {
@@ -34,15 +35,46 @@ const VALIDATORS: Validator[] = [
   },
 ]
 
-const getOrdersByUserId = async (userId: string): Promise<PagingResult> => {
+type SearchParams = {
+  sort: string
+  direction: string
+}
+
+const getOrdersByUserId = async (userId: string, params: SearchParams): Promise<PagingResult> => {
   const res = await baseApi.get('orders/paging', {
     userId,
-    sort: 'createdAt',
-    direction: 'desc',
+    sort: params.sort,
+    direction: params.direction,
   })
   const pagingResult: PagingResult = res.data
   return pagingResult
 }
+
+const ORDER_BY_OPTIONS: MySelectOption[] = [
+  {
+    text: 'Ngày lập',
+    value: 'createdAt',
+  },
+  {
+    text: 'Trạng thái',
+    value: 'status',
+  },
+  {
+    text: 'Tổng tiền',
+    value: 'totalMoney',
+  },
+]
+
+const ORDER_DIRECTION: MySelectOption[] = [
+  {
+    text: 'Tăng dần',
+    value: 'asc',
+  },
+  {
+    text: 'Giảm dần',
+    value: 'desc',
+  },
+]
 
 const InForPage = () => {
   const dispatch = useAppDispatch()
@@ -56,6 +88,10 @@ const InForPage = () => {
   const [totalMoney, setTotalMoney] = useState<number>(0)
   const [isActivePopupConfirm, setIsActivePopupConfirm] = useState(false)
   const [isLoadingSave, setIsLoadingSave] = useState(false)
+  const [searchParams, setSearchParams] = useState<SearchParams>({
+    sort: 'createdAt',
+    direction: 'desc',
+  })
   const [currentUserInfo, setCurrentUserInfo] = useState<EditUser>({
     avatar: '',
     code: '',
@@ -86,7 +122,7 @@ const InForPage = () => {
       if (!userInfo) return
       setIsLoadingOrders(true)
       try {
-        const pagingResult = await getOrdersByUserId(userInfo.id)
+        const pagingResult = await getOrdersByUserId(userInfo.id, searchParams)
         const orders: Order[] = pagingResult.data
         setOrders(orders)
         setTotalMoney(
@@ -102,10 +138,28 @@ const InForPage = () => {
     }
 
     getOrders()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userInfo])
 
   if (!userInfo) {
     return <div></div>
+  }
+
+  const getOrdersFunc = async (sort: string, direction: string) => {
+    if (!userInfo) return
+    setIsLoadingOrders(true)
+    try {
+      const pagingResult = await getOrdersByUserId(userInfo.id, {
+        sort,
+        direction,
+      })
+      const orders: Order[] = pagingResult.data
+      setOrders(orders)
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsLoadingOrders(false)
+    }
   }
 
   const saveUserAvatar = async (e: string) => {
@@ -165,7 +219,7 @@ const InForPage = () => {
       if (!userInfo) return
       setIsLoadingOrders(true)
       try {
-        const pagingResult = await getOrdersByUserId(userInfo.id)
+        const pagingResult = await getOrdersByUserId(userInfo.id, searchParams)
         const orders: Order[] = pagingResult.data
         setOrders(orders)
         setTotalMoney(
@@ -206,6 +260,28 @@ const InForPage = () => {
       setIsLoadingSave(false)
       closePopupConfirm()
     }
+  }
+
+  const handleChangeSort = (sort: string | number | boolean | null | undefined) => {
+    if (!sort) return
+    const sortVal = sort.toString()
+    setSearchParams((prev) => ({
+      ...prev,
+      sort: sortVal,
+    }))
+    getOrdersFunc(sortVal, searchParams.direction)
+  }
+
+  const handleChangeSortDirection = (
+    sortDirection: string | number | boolean | null | undefined
+  ) => {
+    if (!sortDirection) return
+    const sortDirectionVal = sortDirection.toString()
+    setSearchParams((prev) => ({
+      ...prev,
+      direction: sortDirectionVal,
+    }))
+    getOrdersFunc(searchParams.sort, sortDirectionVal)
   }
 
   return (
@@ -345,8 +421,32 @@ const InForPage = () => {
             </div>
           </div>
 
-          <div className="text-2xl leading-none my-4 font-bold flex items-end justify-between">
-            Danh sách đơn hàng
+          <div className="my-4 flex items-end justify-between">
+            <div className="text-2xl leading-none font-bold">Danh sách đơn hàng</div>
+            <div className="flex items-center gap-x-4">
+              <div className="w-60">
+                <MySelect
+                  id="sort"
+                  name="sort"
+                  label="Sắp xếp theo"
+                  isHorizontal={true}
+                  value={searchParams.sort}
+                  options={ORDER_BY_OPTIONS}
+                  onChange={handleChangeSort}
+                />
+              </div>
+              <div className="w-60">
+                <MySelect
+                  id="direction"
+                  name="direction"
+                  label="Hướng sắp xếp"
+                  isHorizontal={true}
+                  value={searchParams.direction}
+                  options={ORDER_DIRECTION}
+                  onChange={handleChangeSortDirection}
+                />
+              </div>
+            </div>
           </div>
           <div className="p-6 rounded-md bg-white">
             {isLoadingOrders ? (
