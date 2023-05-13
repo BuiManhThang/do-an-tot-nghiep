@@ -69,6 +69,7 @@ export default class OrderController extends BaseController {
   }
 
   create = async (req: Request, res: Response) => {
+    return this.success(res, { msg: 'hello' })
     try {
       const entity: CreateOrderDto = req.body
 
