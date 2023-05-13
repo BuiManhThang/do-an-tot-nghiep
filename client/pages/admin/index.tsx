@@ -29,6 +29,7 @@ import { writeFile, utils } from 'xlsx'
 import MyButton from '@/components/my-button/MyButton'
 import { PagingResult } from '@/types/paging'
 import { Product } from '@/types/product'
+import MyLoadingCircle from '@/components/my-loading-circle/MyLoadingCircle'
 
 ChartJS.register(
   CategoryScale,
@@ -125,6 +126,7 @@ const AdminPage = () => {
   const { firstDay: firstDayInMonth, lastDay: lastDayInMonth } = getFirstAndLastDayInMonth()
   const { openToast } = useToastMsg()
   const [selectedTerm, setSelectedTerm] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
   const [selectedStartDate, setSelectedStartDate] = useState(
     convertDate(firstDayInMonth, 'yyyy-MM-dd')
   )
@@ -258,6 +260,7 @@ const AdminPage = () => {
 
   useEffect(() => {
     const getInitData = async () => {
+      setIsLoading(true)
       try {
         const [
           totalResultRes,
@@ -394,6 +397,8 @@ const AdminPage = () => {
           msg: 'Có lỗi xảy ra',
           type: ToastMsgType.Danger,
         })
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -749,7 +754,16 @@ const AdminPage = () => {
       </Head>
       <h2 className="font-bold text-xl mb-6 leading-none">Tổng quan</h2>
 
-      <div className="mb-6 h-[calc(100%_-_44px)] flex flex-col gap-y-6 overflow-auto">
+      <div
+        className={`relative mb-6 h-[calc(100%_-_44px)] flex flex-col gap-y-6 ${
+          isLoading ? 'overflow-hidden' : 'overflow-auto'
+        }`}
+      >
+        {isLoading && (
+          <div className="absolute w-full h-full bg-white z-[1]">
+            <MyLoadingCircle type="primary" />
+          </div>
+        )}
         <div className="shrink-0 grid grid-cols-4 gap-x-6">
           <div className="rounded-md border border-green-600 bg-green-100 py-6 px-6">
             <div className="font-medium mb-2">Số lượng sản phẩm</div>

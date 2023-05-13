@@ -292,7 +292,12 @@ const AdminRecommendSystemPage = () => {
 
   const handleSaveEntity = () => {
     closePopupGenerate()
-    getPaging(searchParams)
+    const newSearchParams: SearchParams = {
+      ...searchParams,
+      pageIndex: 1,
+    }
+    setSearchParams(newSearchParams)
+    getPaging(newSearchParams)
   }
 
   const handleClickEdit = (e: AssociationRule) => {

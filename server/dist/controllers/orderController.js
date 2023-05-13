@@ -276,9 +276,21 @@ class OrderController extends baseController_1.BaseController {
         this.delete = async (req, res) => {
             try {
                 const id = req.params.id;
+                const userIsAdmin = req.body.userIsAdmin;
                 const model = await this.model.findFirst({
                     where: {
                         id,
+                    },
+                    include: {
+                        orderDetails: {
+                            include: {
+                                product: {
+                                    include: {
+                                        category: true,
+                                    },
+                                },
+                            },
+                        },
                     },
                 });
                 if (!model) {
@@ -294,6 +306,35 @@ class OrderController extends baseController_1.BaseController {
                         id,
                     },
                 });
+                // Nếu là admin xóa thì gửi mail xóa cho người dùng
+                if (userIsAdmin) {
+                    const formatedDeleteEntity = {
+                        code: model.code,
+                        createdAt: model.createdAt,
+                        totalMoney: model.totalMoney,
+                        userName: model.userName,
+                        userEmail: model.userEmail,
+                        userPhoneNumber: model.userPhoneNumber,
+                        userCity: model.userCity,
+                        userDistrict: model.userDistrict,
+                        userAddressDetail: model.userAddressDetail,
+                        products: model.orderDetails.map((orderDetail) => {
+                            return {
+                                amount: orderDetail.amount,
+                                categoryId: orderDetail.product.categoryId,
+                                categoryName: orderDetail.product.category.name,
+                                code: orderDetail.product.code,
+                                id: orderDetail.productId,
+                                image: orderDetail.product.image,
+                                name: orderDetail.product.name,
+                                price: orderDetail.price,
+                                unit: orderDetail.product.unit,
+                            };
+                        }),
+                    };
+                    // Gửi email cho người dùng
+                    this.sendMailDeleteOrderToUser(formatedDeleteEntity);
+                }
                 return this.deleted(res, deletedModel);
             }
             catch (error) {
@@ -550,6 +591,90 @@ class OrderController extends baseController_1.BaseController {
         <strong>Ghi chú:</strong> ${order.note || ''}
       </div>`;
                 await (0, mailService_1.sendMail)(order.userEmail, 'Xác nhận đơn hàng', htmlString);
+            }
+            catch (error) {
+                console.log(error);
+            }
+        };
+        this.sendMailDeleteOrderToUser = async (order) => {
+            try {
+                const htmlString = `
+      <div
+        style="height: 60px; width: 600px; background-color: #dc2626; color: #fff; text-align: center; line-height: 60px; margin-bottom: 20px;">
+        <h1>Đơn hàng của bạn đã bị hủy</h1>
+      </div>
+
+      <div style="width: 600px; margin-bottom: 20px; box-sizing: border-box;">
+        <div style="display: flex; margin-bottom: 10px; box-sizing: border-box;">
+          <div style="display: inline-block; width: 300px; padding-right: 10px; box-sizing: border-box;">
+            <strong>Mã đơn:</strong> ${order.code}
+          </div>
+          <div style="display: inline-block; width: 300px; box-sizing: border-box;">
+            <strong>Ngày lập:</strong> ${(0, format_1.convertDate)(order.createdAt)}
+          </div>
+        </div>
+        <div style="display: flex; margin-bottom: 10px; box-sizing: border-box;">
+          <div style="display: inline-block; width: 300px; padding-right: 10px; box-sizing: border-box;">
+            <strong>Họ tên:</strong> ${order.userName}
+          </div>
+          <div style="display: inline-block; width: 300px; box-sizing: border-box;">
+            <strong>SĐT:</strong> ${order.userPhoneNumber}
+          </div>
+        </div>
+        <div style="display: flex; margin-bottom: 10px; box-sizing: border-box;">
+          <div style="display: inline-block; width: 300px; padding-right: 10px; box-sizing: border-box;">
+            <strong>Tỉnh/Thành phố:</strong> ${order.userCity}
+          </div>
+          <div style="display: inline-block; width: 300px; box-sizing: border-box;">
+            <strong>Quận/Huyện:</strong> ${order.userDistrict}
+          </div>
+        </div>
+        <div style="grid-column-start: 1; grid-column-end: 3; box-sizing: border-box;">
+          <strong>Địa chỉ chi tiết:</strong> ${order.userAddressDetail}
+        </div>
+      </div>
+      <table style="border-top: 1px solid #000; border-left: 1px solid #000; border-right: 1px solid #000; width: 600px; border-collapse: separate; border-spacing: 0;">
+        <colgroup>
+          <col style="width: 50px;" />
+          <col style="width: 250px;" />
+          <col style="width: 100px;" />
+          <col style="width: 100px;" />
+          <col style="width: 100px;" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: center; background-color: #dc2626; color: #fff;">STT</th>
+            <th style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: left; background-color: #dc2626; color: #fff;">Tên sản phẩm</th>
+            <th style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: left; background-color: #dc2626; color: #fff;">Đơn vị</th>
+            <th style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: right; background-color: #dc2626; color: #fff;">Đơn giá</th>
+            <th style="border-bottom: 1px solid #000; padding: 0 10px; text-align: right; background-color: #dc2626; color: #fff;">Số lượng</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${order.products
+                    .map((product, index) => {
+                    return `
+              <tr>
+                <td style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: center;">${index + 1}</td>
+                <td style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: left;">${product.name}</td>
+                <td style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: left;">${product.unit}</td>
+                <td style="border-bottom: 1px solid #000; border-right: 1px solid #000; padding: 0 10px; text-align: right;">${(0, format_1.numberWithCommas)(product.price)}</td>
+                <td style="border-bottom: 1px solid #000; padding: 0 10px; text-align: right;">${product.amount}</td>
+              </tr>
+              `;
+                })
+                    .join('')}
+        </tbody>
+      </table>
+      
+      <div style="margin-top: 20px; width: 600px">
+        <strong>Thành tiền:</strong>
+        <strong>${(0, format_1.numberWithCommas)(order.totalMoney)}đ</strong>
+      </div>
+      <div style="width: 600px; margin-top: 10px;">
+        <strong>Ghi chú:</strong> ${order.note || ''}
+      </div>`;
+                await (0, mailService_1.sendMail)(order.userEmail, 'Hủy đơn hàng', htmlString);
             }
             catch (error) {
                 console.log(error);

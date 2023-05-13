@@ -24,6 +24,7 @@ import { Product } from '@/types/product'
 import { ProductInCart } from '@/types/user'
 import { handleClientError } from '@/common/errorHandler'
 import { ValidateRule, Validator, useValidate } from '@/hooks/validateHook'
+import MyLoadingSkeleton from '@/components/my-loading-skeleton/MyLoadingSkeleton'
 
 export type Header = {
   text: string
@@ -72,12 +73,12 @@ const VALIDATORS: Validator[] = [
   {
     field: 'userPhoneNumber',
     name: 'Số điện thoại',
-    rules: [ValidateRule.Required],
+    rules: [ValidateRule.Required, ValidateRule.PhoneNumber],
   },
   {
     field: 'userEmail',
     name: 'Email',
-    rules: [ValidateRule.Required],
+    rules: [ValidateRule.Required, ValidateRule.Email],
   },
   {
     field: 'userCity',
@@ -106,6 +107,7 @@ const Cart = () => {
   const [productsWithAmount, setProductsWithAmount] = useState<ProductInCart[]>([])
   const [isActivePopupConfigm, setIsActivePopupConfigm] = useState(false)
   const [isLoadingSave, setIsLoadingSave] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [isActivePopupInfo, setIsActivePopupInfo] = useState(false)
   const [msgPopupInfo, setMsgPopupInfo] = useState('')
   const [total, setTotal] = useState(0)
@@ -139,6 +141,7 @@ const Cart = () => {
 
   useEffect(() => {
     const getProductsByIds = async () => {
+      setIsLoading(true)
       try {
         const productIds = products.map((p) => p.id)
         const productIdsString = productIds.join(';')
@@ -154,6 +157,8 @@ const Cart = () => {
       } catch (error) {
         console.log(error)
         setProductsWithAmount(products.map((p) => ({ ...p, amountInSystem: 0 })))
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -307,9 +312,34 @@ const Cart = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {productsWithAmount.map((product) => (
-                      <CartItem columns={HEADERS} itemData={product} key={product.id} />
-                    ))}
+                    {!isLoading
+                      ? productsWithAmount.map((product) => (
+                          <CartItem columns={HEADERS} itemData={product} key={product.id} />
+                        ))
+                      : products.map((product) => {
+                          return (
+                            <tr key={product.id} className="group">
+                              <td className="w-[112px] px-4 py-5 align-top border-b border-gray-200 group-last:border-b-0">
+                                <MyLoadingSkeleton className="w-full h-20 rounded-md" />
+                              </td>
+                              <td className="w-[225px] px-4 py-5 align-top border-b border-gray-200 group-last:border-b-0">
+                                <MyLoadingSkeleton className="w-full h-20 rounded-md" />
+                              </td>
+                              <td className="w-[150px] px-4 py-5 align-top border-b border-gray-200 group-last:border-b-0">
+                                <MyLoadingSkeleton className="w-full h-20 rounded-md" />
+                              </td>
+                              <td className="w-[80px] px-4 py-5 align-top border-b border-gray-200 group-last:border-b-0">
+                                <MyLoadingSkeleton className="w-full h-20 rounded-md" />
+                              </td>
+                              <td className="w-[46px] px-4 py-5 align-top border-b border-gray-200 group-last:border-b-0">
+                                <MyLoadingSkeleton className="w-full h-20 rounded-md" />
+                              </td>
+                              <td className="px-4 py-5 align-top border-b border-gray-200 group-last:border-b-0">
+                                <MyLoadingSkeleton className="w-full h-20 rounded-md" />
+                              </td>
+                            </tr>
+                          )
+                        })}
                   </tbody>
                 </table>
 
@@ -490,6 +520,7 @@ const Cart = () => {
                   <MyButton
                     text="Tiến hành đặt hàng"
                     onClick={handleClickMakeOrder}
+                    disabled={isLoading}
                     style={{
                       fontSize: '18px',
                       fontWeight: 'normal',
