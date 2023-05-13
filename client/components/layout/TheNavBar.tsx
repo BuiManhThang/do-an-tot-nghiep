@@ -48,7 +48,6 @@ const TheNavBar = () => {
   const isInAdminPage = userInfo?.isAdmin && router.pathname.includes('admin') ? true : false
 
   useEffect(() => {
-    console.log(isInAdminPage)
     dispatch(getCategories())
   }, [dispatch, isInAdminPage])
 
