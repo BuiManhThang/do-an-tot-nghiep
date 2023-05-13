@@ -20,7 +20,6 @@ dotenv_1.default.config();
 const PORT = process.env.PORT || 3001;
 const CLIENT_URL = process.env.CLIENT_URL;
 const app = (0, express_1.default)();
-console.log(CLIENT_URL);
 // Middlewares
 app.use((0, morgan_1.default)('dev'));
 app.use((0, cors_1.default)({
@@ -38,6 +37,7 @@ app.use('/api/v1/reviews', reviewRouter_1.default);
 app.use('/api/v1/viewHistory', viewHistoryRouter_1.default);
 app.use('/api/v1/associationRules', associationRuleRouter_1.default);
 app.use('/api/v1/report', reportRouter_1.default);
+app.get('/ping', (_, res) => res.json({ msg: 'hello' }));
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
 });

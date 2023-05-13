@@ -30,27 +30,46 @@ class ProductController extends baseController_1.BaseController {
                 this.setPrevValue(entity, model);
                 const updatedEntity = await this.updateEntity(entityId, entity);
                 // Cập nhật sản phẩm trong giỏ hàng
-                await this.prisma.user.updateMany({
-                    where: {
-                        cart: { some: { id: entityId } },
-                    },
-                    data: {
-                        cart: {
-                            updateMany: {
-                                where: { id: entityId },
-                                data: {
-                                    categoryId: updatedEntity.categoryId,
-                                    categoryName: updatedEntity.category.name,
-                                    code: updatedEntity.code,
-                                    image: updatedEntity.image,
-                                    name: updatedEntity.name,
-                                    price: updatedEntity.price,
-                                    unit: updatedEntity.unit,
+                // Nếu vẫn còn đang bán thì cập nhật thuộc tính
+                if (updatedEntity.isActive) {
+                    console.log(1);
+                    await this.prisma.user.updateMany({
+                        where: {
+                            cart: { some: { id: entityId } },
+                        },
+                        data: {
+                            cart: {
+                                updateMany: {
+                                    where: { id: entityId },
+                                    data: {
+                                        categoryId: updatedEntity.categoryId,
+                                        categoryName: updatedEntity.category.name,
+                                        code: updatedEntity.code,
+                                        image: updatedEntity.image,
+                                        name: updatedEntity.name,
+                                        price: updatedEntity.price,
+                                        unit: updatedEntity.unit,
+                                    },
                                 },
                             },
                         },
-                    },
-                });
+                    });
+                }
+                // Nếu ko bán nữa thì xóa luôn
+                else {
+                    await this.prisma.user.updateMany({
+                        where: {
+                            cart: { some: { id: entityId } },
+                        },
+                        data: {
+                            cart: {
+                                deleteMany: {
+                                    where: { id: entityId },
+                                },
+                            },
+                        },
+                    });
+                }
                 return this.updated(res, updatedEntity);
             }
             catch (error) {
@@ -316,7 +335,7 @@ class ProductController extends baseController_1.BaseController {
             if (!newEntity.unit) {
                 newEntity.unit = oldEntity.unit;
             }
-            if (!newEntity.isActive) {
+            if (newEntity.isActive === undefined || newEntity.isActive === null) {
                 newEntity.isActive = oldEntity.isActive;
             }
             if (!newEntity.gallery) {

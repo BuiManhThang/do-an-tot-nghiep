@@ -69,7 +69,6 @@ export default class OrderController extends BaseController {
   }
 
   create = async (req: Request, res: Response) => {
-    return this.success(res, { msg: 'hello' })
     try {
       const entity: CreateOrderDto = req.body
 
@@ -125,7 +124,7 @@ export default class OrderController extends BaseController {
         productId: product.id,
         total: product.amount * product.price,
       }))
-      console.log(JSON.stringify(entity))
+
       const newEntity = await this.model.create({
         data: {
           code: entity.code,
